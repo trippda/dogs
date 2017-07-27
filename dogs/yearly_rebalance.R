@@ -5,12 +5,20 @@
 # Usage: Rscript yearly_rebalance.R
 ##############################################################################################
 
-# TO DO: packages/libraries
-# XML (?)
-# quant (?)
+# Load packages.
+# TO DO: drop out of the whole script if the package is not installed.
+pkgs <- c("XML","quantmod")
+for(pkg in pkgs)
+{
+  if(!require(pkg, character.only = TRUE))
+  {
+    missingPackageMessage <- paste0("Package ", pkg, " is not installed. Install and try again.")
+    warning(missingPackageMessage)
+  }
+}
 
 # For now, just prompt for the total value of the current investment.
-# TO DO: error checking, retry option
+# TO DO: error checking, reprompt, retry option
 # TO DO: Get this from Ameritrade. Api access is very expensive, but this article says I can use httr:
 #   https://stackoverflow.com/questions/10692066/how-to-webscrape-secured-pages-in-r-https-links-using-readhtmltable-from-xml
 readCurrentTotalValue <- function()
