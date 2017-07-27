@@ -1,8 +1,28 @@
-# TO DO some appropriate header description
+##############################################################################################
+# Figures out what to do for the yearly "rebalance" of my "small dogs of the dow" investments.
+# (and gives me an excuse to play with R)
+# 
+# Usage: Rscript yearly_rebalance.R
+##############################################################################################
 
-# TO DO consider this rm thing 
-# rm(list=ls(all=TRUE)) 
+# TO DO: packages/libraries
+# XML (?)
+# quant (?)
 
+# For now, just prompt for the total value of the current investment.
+# TO DO: error checking, retry option
+# TO DO: Get this from Ameritrade. Api access is very expensive, but this article says I can use httr:
+#   https://stackoverflow.com/questions/10692066/how-to-webscrape-secured-pages-in-r-https-links-using-readhtmltable-from-xml
+readCurrentTotalValue <- function()
+{
+   currentTotalValue <- readline(prompt = "Enter total value of the dogs today: ")
+   return(currentTotalValue)
+ }
+if(interactive())
+{
+  currentTotalValue <- readCurrentTotalValue()
+}
+  
 # URL to scrape (current year)
 currentDogsURL <- paste0("http://www.dogsofthedow.com/",strftime(Sys.Date(),"%Y"),"-dogs-of-the-dow.htm")
 
