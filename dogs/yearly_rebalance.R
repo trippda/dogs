@@ -6,17 +6,17 @@
 ##############################################################################################
 
 # get required input
+# TO DO: something better than this giant 'else'
 args <- commandArgs(TRUE)
 if (length(args) != 1)
 {
-  print("Usage: ")
-  print("       Rscript yearly_rebalance.R <TotalValueOfDogsToday>")
+  message("Usage: ")
+  message("       Rscript yearly_rebalance.R <TotalValueOfDogsToday>")
 } else {
 
   currentTotalValue <- args[1]
   
 # Load packages.
-# TO DO: Not working right from bash / Rscript
 # TO DO: bash / Rscript is loading every time, with status message. Why?
 # TO DO: what does "require" do? see http://www.r-fiddle.org/#/ after running demo, look at their code
 # TO DO: drop out of the whole script if the package is not installed. Perhaps like this: http://mazamascience.com/WorkingWithData/?p=912
@@ -78,7 +78,7 @@ currentSmallDogsQuotes <- getQuote( currentSmallDogsCharVector, verbose = TRUE)
 currentSmallDogsQuotesLast <- currentSmallDogsQuotes$Last
 
 # TBD: remove this
-print("DONE")
+message("DONE")
 
 # end arg check 'else'
 }
