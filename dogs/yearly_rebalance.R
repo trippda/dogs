@@ -2,7 +2,7 @@
 # Figures out what to do for the yearly "rebalance" of my "small dogs of the dow" investments.
 # (and gives me an excuse to play with R)
 # 
-# Usage: Rscript yearly_rebalance.R
+# Usage: Rscript yearly_rebalance.R <TotalValueOfDogsToday>
 ##############################################################################################
 
 checkForPackages <- function()
@@ -10,7 +10,7 @@ checkForPackages <- function()
   # Load packages.
   # TO DO: bash / Rscript is loading every time, with status message. Why?
   bPackagesFound <- TRUE
-  pkgs <- c("XML","quantmod","httr")
+  pkgs <- c("XML","quantmod")
   for(pkg in pkgs)
   {
     if(!require(pkg, character.only = TRUE))
