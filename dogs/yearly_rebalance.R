@@ -5,22 +5,31 @@
 # Usage: Rscript yearly_rebalance.R
 ##############################################################################################
 
-main <- function(currentTotalValue)
+# TO DO start here, this function is very wrong - wont return properly
+checkForPackages <- function()
 {
   # Load packages.
   # TO DO: bash / Rscript is loading every time, with status message. Why?
-  # TO DO: what does "require" do? see http://www.r-fiddle.org/#/ after running demo, look at their code
-  # TO DO: drop out of the whole script if the package is not installed. Perhaps like this: http://mazamascience.com/WorkingWithData/?p=912
-  pkgs <- c("XML","quantmod")
+  bPackagesFound <- TRUE
+  pkgs <- c("XML","quantmod","httr")
   for(pkg in pkgs)
   {
     if(!require(pkg, character.only = TRUE))
     {
-      missingPackageMessage <- paste0("Package ", pkg, " is not installed. Install and try again.")
+      if(bPackagesFound)
+      {
+        bPackagesFound <- FALSE
+      }
+      missingPackageMessage <- paste0("***Package ", pkg, " is not installed. Install and try again.***")
       warning(missingPackageMessage)
-    }
+    } 
   }
   
+  return(bPackagesFound)
+}
+
+main <- function(currentTotalValue)
+{
   # For now, just prompt for the total value of the current investment.
   # TO DO: error checking, reprompt, retry option
   # TO DO: Get this from Ameritrade. Api access is very expensive, but this article says I can use httr:
@@ -76,7 +85,16 @@ if (length(args) != 1)
   message("Usage: ")
   message("       Rscript yearly_rebalance.R <TotalValueOfDogsToday>")
 } else {
-  main(args[1])
+  #bPackagesFound <- TRUE
+  goToMain <- checkForPackages()
+  #if (goToMain <- checkForPackages(bPackagesFound))
+  #if (TRUE)
+  if(goToMain)
+  {
+    main(args[1])
+    # TBD remove
+    message("DONE MAIN")
+  }
   #TBD: remove this
-  message("***DONE***")
+  message("***DONE ALL***")
 }
