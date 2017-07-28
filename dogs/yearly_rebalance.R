@@ -5,9 +5,20 @@
 # Usage: Rscript yearly_rebalance.R
 ##############################################################################################
 
+# get required input
+args <- commandArgs(TRUE)
+if (length(args) != 1)
+{
+  print("Usage: ")
+  print("       Rscript yearly_rebalance.R <TotalValueOfDogsToday>")
+} else {
+
+  currentTotalValue <- args[1]
+  
 # Load packages.
 # TO DO: Not working right from bash / Rscript
 # TO DO: bash / Rscript is loading every time, with status message. Why?
+# TO DO: what does "require" do? see http://www.r-fiddle.org/#/ after running demo, look at their code
 # TO DO: drop out of the whole script if the package is not installed. Perhaps like this: http://mazamascience.com/WorkingWithData/?p=912
 pkgs <- c("XML","quantmod")
 for(pkg in pkgs)
@@ -29,10 +40,11 @@ readCurrentTotalValue <- function()
    return(currentTotalValue)
  }
 # TBD: what does interactive mean, why didn't the script pause after input prompt
-#if(interactive())
-#{
+# TBD: support both prompted input and cmd line params
+if(interactive())
+{
   currentTotalValue <- readCurrentTotalValue()
-#}
+}
   
 # URL to scrape (current year)
 currentDogsURL <- paste0("http://www.dogsofthedow.com/",strftime(Sys.Date(),"%Y"),"-dogs-of-the-dow.htm")
@@ -64,3 +76,9 @@ currentSmallDogsQuotes <- getQuote( currentSmallDogsCharVector, verbose = TRUE)
 
 # I only need Last, not the full quote
 currentSmallDogsQuotesLast <- currentSmallDogsQuotes$Last
+
+# TBD: remove this
+print("DONE")
+
+# end arg check 'else'
+}
