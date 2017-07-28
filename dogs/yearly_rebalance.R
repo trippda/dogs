@@ -5,7 +5,6 @@
 # Usage: Rscript yearly_rebalance.R
 ##############################################################################################
 
-# TO DO start here, this function is very wrong - wont return properly
 checkForPackages <- function()
 {
   # Load packages.
