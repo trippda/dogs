@@ -6,7 +6,9 @@
 ##############################################################################################
 
 # Load packages.
-# TO DO: drop out of the whole script if the package is not installed.
+# TO DO: Not working right from bash / Rscript
+# TO DO: bash / Rscript is loading every time, with status message. Why?
+# TO DO: drop out of the whole script if the package is not installed. Perhaps like this: http://mazamascience.com/WorkingWithData/?p=912
 pkgs <- c("XML","quantmod")
 for(pkg in pkgs)
 {
@@ -26,10 +28,11 @@ readCurrentTotalValue <- function()
    currentTotalValue <- readline(prompt = "Enter total value of the dogs today: ")
    return(currentTotalValue)
  }
-if(interactive())
-{
+# TBD: what does interactive mean, why didn't the script pause after input prompt
+#if(interactive())
+#{
   currentTotalValue <- readCurrentTotalValue()
-}
+#}
   
 # URL to scrape (current year)
 currentDogsURL <- paste0("http://www.dogsofthedow.com/",strftime(Sys.Date(),"%Y"),"-dogs-of-the-dow.htm")
