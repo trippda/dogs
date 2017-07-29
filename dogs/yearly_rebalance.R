@@ -14,7 +14,7 @@ checkForPackages <- function()
   # Load packages.
   # TO DO: bash / Rscript is loading every time, with status message. Why?
   bPackagesFound <- TRUE
-  pkgs <- c("XML","quantmod")
+  pkgs <- c("XML","quantmod","xlsx")
   for(pkg in pkgs)
   {
     if(!require(pkg, character.only = TRUE))
@@ -33,8 +33,20 @@ checkForPackages <- function()
 
 main <- function(currentTotalValue)
 {
+  thisYear <- strftime(Sys.Date(),"%Y")
+  
+  # get last year's small dogs
+  # *****TO DO******
+  # C:\Users\Dan\Documents\GIT\R\dogs\SmallDogs.xlsx
+  #smallDogsExcelFile <- system.file("small_dogs","SmallDogs.xlsx", package = "xlsx")
+  #smallDogsFromExcel <- read.xlsx(smallDogsExcelFile,1)
+  #head(smallDogsFromExcel[,1:10])
+  
+  smallDogsFromExcel <- read.xlsx("C:\\Users\\Dan\\Documents\\GIT\\R\\dogs\\SmallDogs.xlsx",1)
+  message(smallDogsFromExcel)
+  
   # URL to scrape (current year)
-  currentDogsURL <- paste0("http://www.dogsofthedow.com/",strftime(Sys.Date(),"%Y"),"-dogs-of-the-dow.htm")
+  currentDogsURL <- paste0("http://www.dogsofthedow.com/",thisYear,"-dogs-of-the-dow.htm")
   
   # get the page. 
   # fyi I read that useInternalNodes = TRUE is ignored for HTML docs, but readHTMLTable below fails without it.
