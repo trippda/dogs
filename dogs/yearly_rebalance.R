@@ -37,6 +37,9 @@ main <- function(currentTotalValue)
   
   # get last year's small dogs
   # *****TO DO******
+  # separate sheets for each year, separate sheet for summary / calculations - perhaps that is the first sheet
+  # store in Documents?? Configurable??
+  # use setwd()
   # C:\Users\Dan\Documents\GIT\R\dogs\SmallDogs.xlsx
   #smallDogsExcelFile <- system.file("small_dogs","SmallDogs.xlsx", package = "xlsx")
   #smallDogsFromExcel <- read.xlsx(smallDogsExcelFile,1)
@@ -73,6 +76,14 @@ main <- function(currentTotalValue)
   
   # I only need Last, not the full quote
   currentSmallDogsQuotesLast <- currentSmallDogsQuotes$Last
+  
+  # TO DO: write these to excel
+  # TO DO: sheet name from year calculation
+  currentSmallDogsDataFrame <- data.frame(currentSmallDogsCharVector,currentSmallDogsQuotesLast)
+  setwd("C:\\Users\\Dan\\Documents\\GIT\\R\\dogs")
+  write.xlsx(currentSmallDogsDataFrame,"temp.xlsx",sheetName = "2017")
+  
+  
 }
 
 # get required input
