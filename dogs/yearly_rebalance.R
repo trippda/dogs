@@ -12,12 +12,11 @@
 checkForPackages <- function()
 {
   # Load packages.
-  # TO DO: bash / Rscript is loading every time, with status message. Why?
   bPackagesFound <- TRUE
   pkgs <- c("XML","quantmod","xlsx")
   for(pkg in pkgs)
   {
-    if(!require(pkg, character.only = TRUE))
+    if(!suppressPackageStartupMessages(require(pkg, character.only = TRUE, quietly = TRUE, warn.conflicts = FALSE)))
     {
       if(bPackagesFound)
       {
@@ -33,20 +32,28 @@ checkForPackages <- function()
 
 main <- function(currentTotalValue)
 {
+  # set up
   thisYear <- strftime(Sys.Date(),"%Y")
+  lastYear <- as.character(as.integer(thisYear) - 1)
   
   # get last year's small dogs
   # *****TO DO******
   # separate sheets for each year, separate sheet for summary / calculations - perhaps that is the first sheet
-  # store in Documents?? Configurable??
-  # use setwd()
-  # C:\Users\Dan\Documents\GIT\R\dogs\SmallDogs.xlsx
-  #smallDogsExcelFile <- system.file("small_dogs","SmallDogs.xlsx", package = "xlsx")
-  #smallDogsFromExcel <- read.xlsx(smallDogsExcelFile,1)
-  #head(smallDogsFromExcel[,1:10])
   
-  smallDogsFromExcel <- read.xlsx("C:\\Users\\Dan\\Documents\\GIT\\R\\dogs\\SmallDogs.xlsx",1)
-  message(smallDogsFromExcel)
+  # working directory.
+  # TO DO: configurable
+  # This doesn't work since Rscript has pwd as HOME
+  #setwd(paste0(Sys.getenv("HOME"),"/Documents/dogs"))
+  #message(paste0("home is ", Sys.getenv("HOME")))
+  setwd("C:/Users/Dan/Documents/dogs")
+  
+  # working file
+  # TO DO: configurable
+  smallDogsWorkingFileName <- "SmallDogs.xlsx"
+  
+  previousSmallDogs <- read.xlsx(smallDogsWorkingFileName,sheetName = lastYear)
+  # TO DO: remove
+  message(previousSmallDogs)
   
   # URL to scrape (current year)
   currentDogsURL <- paste0("http://www.dogsofthedow.com/",thisYear,"-dogs-of-the-dow.htm")
@@ -77,12 +84,17 @@ main <- function(currentTotalValue)
   # I only need Last, not the full quote
   currentSmallDogsQuotesLast <- currentSmallDogsQuotes$Last
   
-  # TO DO: write these to excel
-  # TO DO: sheet name from year calculation
+  # write these to excel
   currentSmallDogsDataFrame <- data.frame(currentSmallDogsCharVector,currentSmallDogsQuotesLast)
-  setwd("C:\\Users\\Dan\\Documents\\GIT\\R\\dogs")
-  write.xlsx(currentSmallDogsDataFrame,"temp.xlsx",sheetName = "2017")
-  
+  write.xlsx(currentSmallDogsDataFrame,smallDogsWorkingFileName,sheetName = thisYear, append = TRUE)
+
+  # TO DO
+  # some way to run multiple times without having to manually clean up the dogs excel file
+  # make the format of the previous / current dogs tables consistent
+  # compare the lists of dogs, create an action list from that
+  # do the calculations showing the change in portfolio value
+  # handle multiple years
+  # organize into functions, called from main
   
 }
 
