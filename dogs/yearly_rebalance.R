@@ -78,32 +78,40 @@ main <- function(currentTotalValue)
   currentSmallDogsCharVector <- currentSmallDogs[['Symbol']]
   
   # get a quote for each small dog
-  # TO DO where do I include the library/package? library(quantmod)
   currentSmallDogsQuotes <- getQuote( currentSmallDogsCharVector, verbose = TRUE)
   
   # I only need Last, not the full quote
   currentSmallDogsQuotesLast <- currentSmallDogsQuotes$Last
   
-  # write these to excel
+  # Create a clean data frame
   currentSmallDogsDataFrame <- data.frame(currentSmallDogsCharVector,currentSmallDogsQuotesLast)
-  write.xlsx(currentSmallDogsDataFrame,smallDogsWorkingFileName,sheetName = thisYear, append = TRUE)
+  colnames(currentSmallDogsDataFrame) <- c("symbol","price.per.share")
+  
+  # compare the previous and current dogs TO DO: how???
+  
+  # write the new (current) dogs to excel, in a new worksheet
+  # TO DO clean up / remove readonly flag
+  if((as.character(args[2])!="readonly"))
+  {
+    write.xlsx(currentSmallDogsDataFrame,smallDogsWorkingFileName,sheetName = thisYear, append = TRUE)
+  }
 
   # TO DO
-  # some way to run multiple times without having to manually clean up the dogs excel file
-  # make the format of the previous / current dogs tables consistent
   # compare the lists of dogs, create an action list from that
   # do the calculations showing the change in portfolio value
   # handle multiple years
   # organize into functions, called from main
+  # clean up the command line dev options ('readonly'). Move it to configuration.
   
 }
 
 # get required input
+# TO DO: remove dev flag options (move to config)
 args <- commandArgs(TRUE)
-if (length(args) != 1)
+if (length(args) != 2)
 {
   message("Usage: ")
-  message("       Rscript yearly_rebalance.R <TotalValueOfDogsToday>")
+  message("       Rscript yearly_rebalance.R <TotalValueOfDogsToday> <readonly|foo>")
 } else {
   # confirm dependencies
   goToMain <- checkForPackages()
