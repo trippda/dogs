@@ -88,6 +88,13 @@ main <- function(currentTotalValue)
   colnames(currentSmallDogsDataFrame) <- c("symbol","price.per.share")
   
   # compare the previous and current dogs TO DO: how???
+  # sellAll <- setdiff(previous,current) # iflength greater than 0, these are previous dogs and I DO NOT have a quote yet
+  # buyAll <- setdiff(current,previous) # if length greater than 0, these are current dogs and I already have the quote
+  #   pricesOfBuyAllDogs <- currentSmallDogsDataFrame[currentSmallDogsDataFrame$symbol %in% buyAll,"price.per.share"]
+  #   pricesAndSymbolsOfBuyAllDogs <- currentSmallDogsDataFrame[currentSmallDogsDataFrame$symbol %in% buyAll, ]
+  #   add column indicating how many shares to buy:
+  #   pricesAndSymbolsOfBuyAllDogs$num.shares.to.buy <- round(target/pricesAndSymbolsOfBuyAllDogs$price.per.share)
+  # buyOrSell <- intersect(previous,current)
   
   # write the new (current) dogs to excel, in a new worksheet
   # TO DO clean up / remove readonly flag
