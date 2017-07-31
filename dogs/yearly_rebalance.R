@@ -30,6 +30,31 @@ checkForPackages <- function()
   return(bPackagesFound)
 }
 
+processDogs <- function(previousDogs,currentDogs)
+{
+  #retuns a data frame with "actions": how many of each stock to buy or sell
+  
+  sellAll <- setdiff(previousDogs,currentDogs) # iflength greater than 0, these are previous dogs and I DO NOT have a quote yet
+  # TO DO process sellAll
+  
+  
+  buyAll <- setdiff(currentDogs,previousDogs) # if length greater than 0, these are current dogs and I already have the quote
+  # TO DO clean  up / implement below
+  #   pricesOfBuyAllDogs <- currentSmallDogsDataFrame[currentSmallDogsDataFrame$symbol %in% buyAll,"price.per.share"]
+  #   pricesAndSymbolsOfBuyAllDogs <- currentSmallDogsDataFrame[currentSmallDogsDataFrame$symbol %in% buyAll, ]
+  #   add column indicating how many shares to buy:
+  #   pricesAndSymbolsOfBuyAllDogs$num.shares.to.buy <- round(target/pricesAndSymbolsOfBuyAllDogs$price.per.share)
+  
+  
+  buyOrSell <- intersect(previousDogs,currentDogs)
+  # TO DO process buyOrSell
+  
+  # TO DO combine the actions data frames
+  
+  # TO DO return the actions data frame (just using currentDogs for now)
+  return(currentDogs)
+}
+
 main <- function(currentTotalValue)
 {
   # set up
@@ -53,7 +78,7 @@ main <- function(currentTotalValue)
   
   previousSmallDogs <- read.xlsx(smallDogsWorkingFileName,sheetName = lastYear)
   # TO DO: remove
-  message(previousSmallDogs)
+  #message(previousSmallDogs)
   
   # URL to scrape (current year)
   currentDogsURL <- paste0("http://www.dogsofthedow.com/",thisYear,"-dogs-of-the-dow.htm")
@@ -98,11 +123,21 @@ main <- function(currentTotalValue)
   
   # write the new (current) dogs to excel, in a new worksheet
   # TO DO clean up / remove readonly flag
+  # TO DO don't do this here (?)
   if((as.character(args[2])!="readonly"))
   {
     write.xlsx(currentSmallDogsDataFrame,smallDogsWorkingFileName,sheetName = thisYear, append = TRUE)
   }
 
+  # figure out what to buy or sell
+  # TO DO do not do the write above (?)
+  actionsDataFrame <- processDogs(previousSmallDogs,currentSmallDogsDataFrame)
+  
+  # TO DO: decide if I want to write this now
+  write.xlsx(actionsDataFrame,smallDogsWorkingFileName,sheetName = paste(thisYear,"actions", sep = "-"),append = TRUE)
+  
+  
+  
   # TO DO
   # compare the lists of dogs, create an action list from that
   # do the calculations showing the change in portfolio value
