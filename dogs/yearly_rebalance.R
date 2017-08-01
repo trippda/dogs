@@ -30,9 +30,12 @@ checkForPackages <- function()
   return(bPackagesFound)
 }
 
-processDogs <- function(previousDogs,currentDogs)
+processDogs <- function(previousDogs,currentDogs,portfolioValue)
 {
   #retuns a data frame with "actions": how many of each stock to buy or sell
+  
+  # calculate target value for each small dog: total value of the portfolio today divided by 5 
+  target <- as.numeric(portfolioValue)/5
   
   sellAll <- setdiff(previousDogs,currentDogs) # iflength greater than 0, these are previous dogs and I DO NOT have a quote yet
   # TO DO process sellAll
@@ -40,10 +43,14 @@ processDogs <- function(previousDogs,currentDogs)
   
   buyAll <- setdiff(currentDogs,previousDogs) # if length greater than 0, these are current dogs and I already have the quote
   # TO DO clean  up / implement below
-  #   pricesOfBuyAllDogs <- currentSmallDogsDataFrame[currentSmallDogsDataFrame$symbol %in% buyAll,"price.per.share"]
-  #   pricesAndSymbolsOfBuyAllDogs <- currentSmallDogsDataFrame[currentSmallDogsDataFrame$symbol %in% buyAll, ]
-  #   add column indicating how many shares to buy:
-  #   pricesAndSymbolsOfBuyAllDogs$num.shares.to.buy <- round(target/pricesAndSymbolsOfBuyAllDogs$price.per.share)
+  # TO DO: What if length = o?
+  # TO DO remove this:
+  #pricesOfBuyAllDogs <- currentDogs[currentDogs$symbol %in% buyAll,"price.per.share"]
+  pricesAndSymbolsOfBuyAllDogs <- currentDogs[currentDogs$symbol %in% buyAll, ] 
+  
+  # add column indicating number of shares to buy for each stock
+  # number of shares to buy is 1/5 the portfolio value ("target") / current price
+  pricesAndSymbolsOfBuyAllDogs$num.shares.to.buy <- round(target/pricesAndSymbolsOfBuyAllDogs$price.per.share)
   
   
   buyOrSell <- intersect(previousDogs,currentDogs)
@@ -52,7 +59,9 @@ processDogs <- function(previousDogs,currentDogs)
   # TO DO combine the actions data frames
   
   # TO DO return the actions data frame (just using currentDogs for now)
+  # TO DO *****************something wrong with pricesAndSymbolsOfBuyAllDogs
   return(currentDogs)
+  #return(pricesAndSymbolsOfBuyAllDogs)
 }
 
 main <- function(currentTotalValue)
@@ -131,7 +140,7 @@ main <- function(currentTotalValue)
 
   # figure out what to buy or sell
   # TO DO do not do the write above (?)
-  actionsDataFrame <- processDogs(previousSmallDogs,currentSmallDogsDataFrame)
+  actionsDataFrame <- processDogs(previousSmallDogs,currentSmallDogsDataFrame,currentTotalValue)
   
   # TO DO: decide if I want to write this now
   write.xlsx(actionsDataFrame,smallDogsWorkingFileName,sheetName = paste(thisYear,"actions", sep = "-"),append = TRUE)
