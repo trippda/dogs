@@ -48,30 +48,24 @@ processDogs <- function(previousDogs,currentDogs,portfolioValue)
   #message(paste0("portfolio value: ",as.character(portfolioValue)))
   #message(paste0("target: ",as.character(target)))
   
-  sellAll <- setdiff(previousDogs$symbol,currentDogs$symbol) # iflength greater than 0, these are previous dogs and I DO NOT have a quote yet
+  # if length greater than 0, these are previous dogs and I DO NOT have a quote yet
+  # *****TO DO: What if length = o?*****
+  sellAll <- setdiff(previousDogs$symbol,currentDogs$symbol) 
   # TO DO process sellAll
   
   # if length greater than 0, these are current dogs and I already have the quote
   # *****TO DO: What if length = o?*****
   buyAll <- setdiff(currentDogs$symbol,previousDogs$symbol) 
-  
-  #message("buyAll: ")
-  #message(buyAll)
-  #message("buyAll$symbol: ")
-  #message(buyAll$symbol)
-  #message("currentDogs in buyall: ")
-  #message(currentDogs$symbol %in% buyAll) ####these are all false!!!
-  
+
   # make a new data from from the new ("buy all") symbols and quotes
   pricesAndSymbolsOfBuyAllDogs <- currentDogs[currentDogs$symbol %in% buyAll, ] 
-  #message("pricesAndSymbolsOfBuyAllDogs 1: ")
-  #message(pricesAndSymbolsOfBuyAllDogs)
-  
+
   # add column indicating number of shares to buy for each stock
   # number of shares to buy is 1/5 the portfolio value ("target") / current price
   # TO DO: make this a function (called for sell all and buyOrSell) 
   pricesAndSymbolsOfBuyAllDogs$num.shares.to.buy <- round(target/pricesAndSymbolsOfBuyAllDogs$price.per.share)
   
+  # *****TO DO: What if length = o?*****
   buyOrSell <- intersect(previousDogs$symbol,currentDogs$symbol)
   # TO DO process buyOrSell
   
