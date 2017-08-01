@@ -30,65 +30,54 @@ checkForPackages <- function()
   return(bPackagesFound)
 }
 
+#retuns a data frame with "actions": how many of each stock to buy or sell
 processDogs <- function(previousDogs,currentDogs,portfolioValue)
 {
-  message("currentDogs: ")
-  message(currentDogs)
-  message("prevousDogs: ")
-  message(previousDogs)
-  
-  #retuns a data frame with "actions": how many of each stock to buy or sell
+  #message("currentDogs: ")
+  #message(currentDogs)
+  #message("prevousDogs: ")
+  #message(previousDogs)
+  #message("previousDogs$symbol: ")
+  #message(previousDogs$symbol)
+  #message("currentDogs$symbol: ")
+  #message(currentDogs$symbol)
   
   # calculate target value for each small dog: total value of the portfolio today divided by 5 
   target <- as.numeric(portfolioValue)/5
   
-  sellAll <- setdiff(previousDogs,currentDogs) # iflength greater than 0, these are previous dogs and I DO NOT have a quote yet
+  #message(paste0("portfolio value: ",as.character(portfolioValue)))
+  #message(paste0("target: ",as.character(target)))
+  
+  sellAll <- setdiff(previousDogs$symbol,currentDogs$symbol) # iflength greater than 0, these are previous dogs and I DO NOT have a quote yet
   # TO DO process sellAll
   
+  # if length greater than 0, these are current dogs and I already have the quote
+  # *****TO DO: What if length = o?*****
+  buyAll <- setdiff(currentDogs$symbol,previousDogs$symbol) 
   
-  #buyAll <- setdiff(currentDogs,previousDogs) # if length greater than 0, these are current dogs and I already have the quote
-  buyAll <- setdiff(currentDogs$symbol,previousDogs$symbol) # if length greater than 0, these are current dogs and I already have the quote
-  message("buyAll: ")
-  message(buyAll)
-  
+  #message("buyAll: ")
+  #message(buyAll)
   #message("buyAll$symbol: ")
   #message(buyAll$symbol)
+  #message("currentDogs in buyall: ")
+  #message(currentDogs$symbol %in% buyAll) ####these are all false!!!
   
-  message("previousDogs$symbol: ")
-  message(previousDogs$symbol)
-  message("currentDogs$symbol: ")
-  message(currentDogs$symbol)
-  
-  message("currentDogs in buyall: ")
-  message(currentDogs$symbol %in% buyAll) ####these are all false!!!
-  
-  # TO DO clean  up below
-  # *****TO DO: What if length = o?*****
-  # TO DO remove this:
-  #pricesOfBuyAllDogs <- currentDogs[currentDogs$symbol %in% buyAll,"price.per.share"]
+  # make a new data from from the new ("buy all") symbols and quotes
   pricesAndSymbolsOfBuyAllDogs <- currentDogs[currentDogs$symbol %in% buyAll, ] 
-  message("pricesAndSymbolsOfBuyAllDogs 1: ")
-  message(pricesAndSymbolsOfBuyAllDogs)
+  #message("pricesAndSymbolsOfBuyAllDogs 1: ")
+  #message(pricesAndSymbolsOfBuyAllDogs)
   
   # add column indicating number of shares to buy for each stock
   # number of shares to buy is 1/5 the portfolio value ("target") / current price
+  # TO DO: make this a function (called for sell all and buyOrSell) 
   pricesAndSymbolsOfBuyAllDogs$num.shares.to.buy <- round(target/pricesAndSymbolsOfBuyAllDogs$price.per.share)
   
-  message(paste0("portfolio value: ",as.character(portfolioValue)))
-  message(paste0("target: ",as.character(target)))
-  message("currentDogs: ")
-  message(currentDogs)
-  message("pricesAndSymbolsOfBuyAllDogs:")
-  message(pricesAndSymbolsOfBuyAllDogs)
-  
-  
-  buyOrSell <- intersect(previousDogs,currentDogs)
+  buyOrSell <- intersect(previousDogs$symbol,currentDogs$symbol)
   # TO DO process buyOrSell
   
   # TO DO combine the actions data frames
   
-  # TO DO return the actions data frame (just using currentDogs for now)
-  # TO DO *****************something wrong with pricesAndSymbolsOfBuyAllDogs
+  # TO DO return the uber actions data frame (just using currentDogs for now)
   #return(currentDogs)
   return(pricesAndSymbolsOfBuyAllDogs)
 }
