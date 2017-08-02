@@ -61,7 +61,9 @@ processDogs <- function(previousDogs,currentDogs,portfolioValue)
   #message(paste0("portfolio value: ",as.character(portfolioValue)))
   #message(paste0("target: ",as.character(target)))
   
+  ####################################################### 
   # First, the dogs I own that are no longer small dogs
+  ####################################################### 
   
   # if length greater than 0, these are previous dogs and I DO NOT have a quote yet
   # *****TO DO: What if length = o?*****
@@ -72,7 +74,10 @@ processDogs <- function(previousDogs,currentDogs,portfolioValue)
   sellAllDogsAndActions <- previousDogs[previousDogs$symbol %in% sellAll,c("symbol","price.per.share","num.shares")]
   sellAllDogsAndActions$price.per.share <- "N/A"
   sellAllDogsAndActions$action <- "SELL"
-  
+ 
+  ####################################################### 
+  # Next, the new small dogs--ones I do not own any of yet
+  #######################################################  
 
   # if length greater than 0, these are current dogs and I already have the quote
   # *****TO DO: What if length = o?*****
@@ -90,25 +95,33 @@ processDogs <- function(previousDogs,currentDogs,portfolioValue)
   # TO DO: merge is failing so try this for force type to character. Find a better solution!
   buyAllDogsAndActions$price.per.share <- "N/A"  
   buyAllDogsAndActions$action <- "BUY"
+
+  ####################################################### 
+  # Then, the dogs I own that are still small dogs
+  ####################################################### 
   
   # *****TO DO: What if length = o?*****
   buyOrSell <- intersect(previousDogs$symbol,currentDogs$symbol)
   # TO DO process buyOrSell
   
+  ####################################################### 
+  # Combine the results and return
+  #######################################################   
+  
   # TO DO combine the actions data frames
-  actionsDataFrame <- merge(sellAllDogsAndActions,buyAllDogsAndActions)
-  message("sellAllDogsAndActions: ")
-  message(sellAllDogsAndActions)
-  message("buyAllDogsAndActions: ")
-  message(buyAllDogsAndActions)
-  message("actionsDataFrame: ")
-  message(actionsDataFrame)
+  actionsDataFrame <- rbind(sellAllDogsAndActions,buyAllDogsAndActions)
+  #message("sellAllDogsAndActions: ")
+  #message(sellAllDogsAndActions)
+  #message("buyAllDogsAndActions: ")
+  #message(buyAllDogsAndActions)
+  #message("actionsDataFrame: ")
+  #message(actionsDataFrame)
   
   # TO DO return the uber actions data frame (just using intermediate steps for now)
   #return(currentDogs)
   #return(buyAllDogsAndActions)
-  return(sellAllDogsAndActions)
-  #return(actionsDataFrame)
+  #return(sellAllDogsAndActions)
+  return(actionsDataFrame)
 }
 
 main <- function(currentTotalValue)
