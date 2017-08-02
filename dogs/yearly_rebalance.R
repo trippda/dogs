@@ -55,6 +55,8 @@ processDogs <- function(previousDogs,currentDogs,portfolioValue)
   #message("currentDogs$symbol: ")
   #message(currentDogs$symbol)
   
+  # Get price.per.share for previousDogs
+  
   # calculate target value for each small dog: total value of the portfolio today divided by 5 
   target <- as.numeric(portfolioValue)/5
   
@@ -103,6 +105,22 @@ processDogs <- function(previousDogs,currentDogs,portfolioValue)
   # *****TO DO: What if length = o?*****
   buyOrSell <- intersect(previousDogs$symbol,currentDogs$symbol)
   # TO DO process buyOrSell
+  # this is just one column of symbols
+  #message("buyOrSell: ")
+  #message(buyOrSell)
+  # symbol column is from buyOrSell
+  buyOrSellDogsAndActions <-data.frame(symbol=buyOrSell)
+  # ****TO DO: a better plan!! **I have price.per.share for currentDogs...and need it for previousDogs
+  #buyOrSellDogsAndActions$price.per.share <- "N/A"
+  # just put in price.per.share that I have (currentDogs)
+  
+  # get price.per.share that I don't have (previousDogs)
+  
+  # *********BETTER: Go back to the top and get quotes for previousDogs - that will let me use them as a sanity check before buy or sell AND let me use them here
+  #TO DO remove this
+  buyOrSellDogsAndActions$price.per.share <- "N/A"
+  buyOrSellDogsAndActions$num.shares <-"1"
+  buyOrSellDogsAndActions$action <-"FOO"
   
   ####################################################### 
   # Combine the results and return
@@ -110,6 +128,7 @@ processDogs <- function(previousDogs,currentDogs,portfolioValue)
   
   # TO DO combine the actions data frames
   actionsDataFrame <- rbind(sellAllDogsAndActions,buyAllDogsAndActions)
+  actionsDataFrame <- rbind(actionsDataFrame,buyOrSellDogsAndActions)
   #message("sellAllDogsAndActions: ")
   #message(sellAllDogsAndActions)
   #message("buyAllDogsAndActions: ")
