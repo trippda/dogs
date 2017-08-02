@@ -30,6 +30,19 @@ checkForPackages <- function()
   return(bPackagesFound)
 }
 
+# gets a quote for each symbol, returns LAST
+getLast <- function(symbolCharVector)
+{
+  # get a quote for each
+  # TO DO: do I need that verbose flag?
+  quoteCharVector <- getQuote( symbolCharVector, verbose = TRUE)
+  
+  # I only need Last, not the full quote
+  quoteCharVectorLast <- quoteCharVector$Last
+  
+  return(quoteCharVectorLast)
+}
+
 #retuns a data frame with "actions": how many of each stock to buy or sell
 processDogs <- function(previousDogs,currentDogs,portfolioValue)
 {
@@ -48,54 +61,74 @@ processDogs <- function(previousDogs,currentDogs,portfolioValue)
   #message(paste0("portfolio value: ",as.character(portfolioValue)))
   #message(paste0("target: ",as.character(target)))
   
+  # First, the dogs I own that are no longer small dogs
+  
   # if length greater than 0, these are previous dogs and I DO NOT have a quote yet
   # *****TO DO: What if length = o?*****
   sellAll <- setdiff(previousDogs$symbol,currentDogs$symbol) 
-  # TO DO process sellAll
+  # create a new data frame of sellAll dogs symbols, number of shares I own, and SELL action
+  # TO DO: This price.per.share is last year's. Consider getting a fresh quote...though I don't need
+  # it, except for a sanity check calculation before selling.
+  sellAllDogsAndActions <- previousDogs[previousDogs$symbol %in% sellAll,c("symbol","price.per.share","num.shares")]
+  sellAllDogsAndActions$price.per.share <- "N/A"
+  sellAllDogsAndActions$action <- "SELL"
   
+
   # if length greater than 0, these are current dogs and I already have the quote
   # *****TO DO: What if length = o?*****
   buyAll <- setdiff(currentDogs$symbol,previousDogs$symbol) 
 
-  # make a new data from from the new ("buy all") symbols and quotes
-  pricesAndSymbolsOfBuyAllDogs <- currentDogs[currentDogs$symbol %in% buyAll, ] 
+  # make a new data frame from the new ("buy all") symbols and quotes
+  # TO DO: I don't really need the quotes here (except for a sanity check calculation before buying), 
+  # and, with sellAll, I don't have the quotes. Consider either adding them to sellAll or removing from here.
+  buyAllDogsAndActions <- currentDogs[currentDogs$symbol %in% buyAll, ] 
 
   # add column indicating number of shares to buy for each stock
   # number of shares to buy is 1/5 the portfolio value ("target") / current price
-  # TO DO: make this a function (called for sell all and buyOrSell) 
-  pricesAndSymbolsOfBuyAllDogs$num.shares.to.buy <- round(target/pricesAndSymbolsOfBuyAllDogs$price.per.share)
+  # TO DO: make this a function (called for buyOrSell and buyAll)
+  buyAllDogsAndActions$num.shares <- round(target/buyAllDogsAndActions$price.per.share)
+  # TO DO: merge is failing so try this for force type to character. Find a better solution!
+  buyAllDogsAndActions$price.per.share <- "N/A"  
+  buyAllDogsAndActions$action <- "BUY"
   
   # *****TO DO: What if length = o?*****
   buyOrSell <- intersect(previousDogs$symbol,currentDogs$symbol)
   # TO DO process buyOrSell
   
   # TO DO combine the actions data frames
+  actionsDataFrame <- merge(sellAllDogsAndActions,buyAllDogsAndActions)
+  message("sellAllDogsAndActions: ")
+  message(sellAllDogsAndActions)
+  message("buyAllDogsAndActions: ")
+  message(buyAllDogsAndActions)
+  message("actionsDataFrame: ")
+  message(actionsDataFrame)
   
-  # TO DO return the uber actions data frame (just using currentDogs for now)
+  # TO DO return the uber actions data frame (just using intermediate steps for now)
   #return(currentDogs)
-  return(pricesAndSymbolsOfBuyAllDogs)
+  #return(buyAllDogsAndActions)
+  return(sellAllDogsAndActions)
+  #return(actionsDataFrame)
 }
 
 main <- function(currentTotalValue)
 {
   # set up
-  thisYear <- strftime(Sys.Date(),"%Y")
-  lastYear <- as.character(as.integer(thisYear) - 1)
+    thisYear <- strftime(Sys.Date(),"%Y")
+    lastYear <- as.character(as.integer(thisYear) - 1)
+    # working directory.
+    # TO DO: configurable
+    # This doesn't work since Rscript has pwd as HOME
+    #setwd(paste0(Sys.getenv("HOME"),"/Documents/dogs"))
+    #message(paste0("home is ", Sys.getenv("HOME")))
+    setwd("C:/Users/Dan/Documents/dogs")
+    # working file
+    # TO DO: configurable
+    smallDogsWorkingFileName <- "SmallDogs.xlsx"
   
   # get last year's small dogs
   # *****TO DO******
   # separate sheets for each year, separate sheet for summary / calculations - perhaps that is the first sheet
-  
-  # working directory.
-  # TO DO: configurable
-  # This doesn't work since Rscript has pwd as HOME
-  #setwd(paste0(Sys.getenv("HOME"),"/Documents/dogs"))
-  #message(paste0("home is ", Sys.getenv("HOME")))
-  setwd("C:/Users/Dan/Documents/dogs")
-  
-  # working file
-  # TO DO: configurable
-  smallDogsWorkingFileName <- "SmallDogs.xlsx"
   
   previousSmallDogs <- read.xlsx(smallDogsWorkingFileName,sheetName = lastYear)
   # TO DO: remove
@@ -124,6 +157,8 @@ main <- function(currentTotalValue)
   currentSmallDogsCharVector <- currentSmallDogs[['Symbol']]
   
   # get a quote for each small dog
+  # TO DO: use my getLast function instead
+  # TO DO: do I need that verbose flag?
   currentSmallDogsQuotes <- getQuote( currentSmallDogsCharVector, verbose = TRUE)
   
   # I only need Last, not the full quote
@@ -155,7 +190,10 @@ main <- function(currentTotalValue)
   actionsDataFrame <- processDogs(previousSmallDogs,currentSmallDogsDataFrame,currentTotalValue)
   
   # TO DO: decide if I want to write this now
-  write.xlsx(actionsDataFrame,smallDogsWorkingFileName,sheetName = paste(thisYear,"actions", sep = "-"),append = TRUE)
+  if((as.character(args[2])!="readonly"))
+  {
+    write.xlsx(actionsDataFrame,smallDogsWorkingFileName,sheetName = paste(thisYear,"actions", sep = "-"),append = TRUE)
+  }  
   
   
   
