@@ -55,30 +55,31 @@ processDogs <- function(previousDogs,currentDogs,portfolioValue)
   #message("currentDogs$symbol: ")
   #message(currentDogs$symbol)
   
-  # Get price.per.share for previousDogs
-  
   # calculate target value for each small dog: total value of the portfolio today divided by 5 
   target <- as.numeric(portfolioValue)/5
   
   #message(paste0("portfolio value: ",as.character(portfolioValue)))
   #message(paste0("target: ",as.character(target)))
-  
+
+  # Get current price.per.share for previousDogs
+  previousDogs$price.per.share <- getLast(as.character(previousDogs$symbol))
+  #message("prevousDogs: ")
+  #message(previousDogs)   
+    
   ####################################################### 
-  # First, the dogs I own that are no longer small dogs
+  # First, the dogs I own that are no longer small dogs: sell all I have
   ####################################################### 
   
   # if length greater than 0, these are previous dogs and I DO NOT have a quote yet
   # *****TO DO: What if length = o?*****
   sellAll <- setdiff(previousDogs$symbol,currentDogs$symbol) 
   # create a new data frame of sellAll dogs symbols, number of shares I own, and SELL action
-  # TO DO: This price.per.share is last year's. Consider getting a fresh quote...though I don't need
-  # it, except for a sanity check calculation before selling.
+  # include the current price per share, just for a sanity check calculation before selling.
   sellAllDogsAndActions <- previousDogs[previousDogs$symbol %in% sellAll,c("symbol","price.per.share","num.shares")]
-  sellAllDogsAndActions$price.per.share <- "N/A"
   sellAllDogsAndActions$action <- "SELL"
  
   ####################################################### 
-  # Next, the new small dogs--ones I do not own any of yet
+  # Next, the new small dogs--ones I do not own any of yet: buy all (target value = 1/5 portfolio value)
   #######################################################  
 
   # if length greater than 0, these are current dogs and I already have the quote
@@ -86,41 +87,39 @@ processDogs <- function(previousDogs,currentDogs,portfolioValue)
   buyAll <- setdiff(currentDogs$symbol,previousDogs$symbol) 
 
   # make a new data frame from the new ("buy all") symbols and quotes
-  # TO DO: I don't really need the quotes here (except for a sanity check calculation before buying), 
-  # and, with sellAll, I don't have the quotes. Consider either adding them to sellAll or removing from here.
+  # include the current price per share, just for a sanity check calculation before selling.
   buyAllDogsAndActions <- currentDogs[currentDogs$symbol %in% buyAll, ] 
 
   # add column indicating number of shares to buy for each stock
   # number of shares to buy is 1/5 the portfolio value ("target") / current price
   # TO DO: make this a function (called for buyOrSell and buyAll)
   buyAllDogsAndActions$num.shares <- round(target/buyAllDogsAndActions$price.per.share)
-  # TO DO: merge is failing so try this for force type to character. Find a better solution!
-  buyAllDogsAndActions$price.per.share <- "N/A"  
   buyAllDogsAndActions$action <- "BUY"
 
   ####################################################### 
-  # Then, the dogs I own that are still small dogs
+  # Then, the dogs I own that are still small dogs: buy or sell some
   ####################################################### 
   
   # *****TO DO: What if length = o?*****
   buyOrSell <- intersect(previousDogs$symbol,currentDogs$symbol)
-  # TO DO process buyOrSell
-  # this is just one column of symbols
+  # TO DO process remove these debugs
   #message("buyOrSell: ")
   #message(buyOrSell)
-  # symbol column is from buyOrSell
-  buyOrSellDogsAndActions <-data.frame(symbol=buyOrSell)
-  # ****TO DO: a better plan!! **I have price.per.share for currentDogs...and need it for previousDogs
+
+  # Make a new data frame from the symbols where I may need to buy or sell. Include the current
+  # include the current price per share, just for a sanity check calculation before selling.
+  # TO DO: not sure why, but I must specify columns c("symbol","price.per.share") else I get a NA. column.
+  buyOrSellDogsAndActions <- previousDogs[previousDogs$symbol %in% buyOrSell,c("symbol","price.per.share")]
+  
+  # TO DO ************** figure out the number of shares and the action ****************
+  
+  
+  # TO DO remove this
   #buyOrSellDogsAndActions$price.per.share <- "N/A"
-  # just put in price.per.share that I have (currentDogs)
-  
-  # get price.per.share that I don't have (previousDogs)
-  
-  # *********BETTER: Go back to the top and get quotes for previousDogs - that will let me use them as a sanity check before buy or sell AND let me use them here
-  #TO DO remove this
-  buyOrSellDogsAndActions$price.per.share <- "N/A"
   buyOrSellDogsAndActions$num.shares <-"1"
   buyOrSellDogsAndActions$action <-"FOO"
+  
+  #************study, use apply()**********
   
   ####################################################### 
   # Combine the results and return
@@ -133,13 +132,17 @@ processDogs <- function(previousDogs,currentDogs,portfolioValue)
   #message(sellAllDogsAndActions)
   #message("buyAllDogsAndActions: ")
   #message(buyAllDogsAndActions)
+  #message("buyOrSellDogsAndActions: ")
+  #message(buyOrSellDogsAndActions)
   #message("actionsDataFrame: ")
   #message(actionsDataFrame)
+
   
   # TO DO return the uber actions data frame (just using intermediate steps for now)
   #return(currentDogs)
   #return(buyAllDogsAndActions)
   #return(sellAllDogsAndActions)
+  #return(buyOrSellDogsAndActions)
   return(actionsDataFrame)
 }
 
@@ -200,18 +203,10 @@ main <- function(currentTotalValue)
   currentSmallDogsDataFrame <- data.frame(currentSmallDogsCharVector,currentSmallDogsQuotesLast)
   colnames(currentSmallDogsDataFrame) <- c("symbol","price.per.share")
   
-  # compare the previous and current dogs TO DO: how???
-  # sellAll <- setdiff(previous,current) # iflength greater than 0, these are previous dogs and I DO NOT have a quote yet
-  # buyAll <- setdiff(current,previous) # if length greater than 0, these are current dogs and I already have the quote
-  #   pricesOfBuyAllDogs <- currentSmallDogsDataFrame[currentSmallDogsDataFrame$symbol %in% buyAll,"price.per.share"]
-  #   pricesAndSymbolsOfBuyAllDogs <- currentSmallDogsDataFrame[currentSmallDogsDataFrame$symbol %in% buyAll, ]
-  #   add column indicating how many shares to buy:
-  #   pricesAndSymbolsOfBuyAllDogs$num.shares.to.buy <- round(target/pricesAndSymbolsOfBuyAllDogs$price.per.share)
-  # buyOrSell <- intersect(previous,current)
-  
   # write the new (current) dogs to excel, in a new worksheet
   # TO DO clean up / remove readonly flag
   # TO DO don't do this here (?)
+  # TO DO: fill in the num.shares column
   if((as.character(args[2])!="readonly"))
   {
     write.xlsx(currentSmallDogsDataFrame,smallDogsWorkingFileName,sheetName = thisYear, append = TRUE)
@@ -231,6 +226,7 @@ main <- function(currentTotalValue)
   
   # TO DO
   # compare the lists of dogs, create an action list from that
+  # add num.shares to the current (2017) tab
   # do the calculations showing the change in portfolio value
   # handle multiple years
   # organize into functions, called from main
