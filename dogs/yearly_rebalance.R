@@ -43,34 +43,20 @@ getLast <- function(symbolCharVector)
   return(quoteCharVectorLast)
 }
 
-#retuns a data frame with "actions": how many of each stock to buy or sell
+#retuns a data frame with "actions", which is the number of each stock to buy or sell
 processDogs <- function(previousDogs,currentDogs,portfolioValue)
 {
-  #message("currentDogs: ")
-  #message(currentDogs)
-  #message("prevousDogs: ")
-  #message(previousDogs)
-  #message("previousDogs$symbol: ")
-  #message(previousDogs$symbol)
-  #message("currentDogs$symbol: ")
-  #message(currentDogs$symbol)
-  
   # calculate target value for each small dog: total value of the portfolio today divided by 5 
   target <- as.numeric(portfolioValue)/5
   
-  #message(paste0("portfolio value: ",as.character(portfolioValue)))
-  #message(paste0("target: ",as.character(target)))
-
   # Get current price.per.share for previousDogs
   previousDogs$price.per.share <- getLast(as.character(previousDogs$symbol))
-  #message("prevousDogs: ")
-  #message(previousDogs)   
-    
+
   ####################################################### 
   # First, the dogs I own that are no longer small dogs: sell all I have
   ####################################################### 
   
-  # if length greater than 0, these are previous dogs and I DO NOT have a quote yet
+  # if length greater than 0, these are previous dogs (I got a current quote above)
   # *****TO DO: What if length = o?*****
   sellAll <- setdiff(previousDogs$symbol,currentDogs$symbol) 
   # create a new data frame of sellAll dogs symbols, number of shares I own, and SELL action
@@ -82,7 +68,7 @@ processDogs <- function(previousDogs,currentDogs,portfolioValue)
   # Next, the new small dogs--ones I do not own any of yet: buy all (target value = 1/5 portfolio value)
   #######################################################  
 
-  # if length greater than 0, these are current dogs and I already have the quote
+  # if length greater than 0, these are current dogs. I already have the quote
   # *****TO DO: What if length = o?*****
   buyAll <- setdiff(currentDogs$symbol,previousDogs$symbol) 
 
@@ -91,8 +77,7 @@ processDogs <- function(previousDogs,currentDogs,portfolioValue)
   buyAllDogsAndActions <- currentDogs[currentDogs$symbol %in% buyAll, ] 
 
   # add column indicating number of shares to buy for each stock
-  # number of shares to buy is 1/5 the portfolio value ("target") / current price
-  # TO DO: make this a function (called for buyOrSell and buyAll)
+  # number of shares to buy is 1/5 the portfolio value ("target") / current price, rounded
   buyAllDogsAndActions$num.shares <- round(target/buyAllDogsAndActions$price.per.share)
   buyAllDogsAndActions$action <- "BUY"
 
@@ -102,69 +87,43 @@ processDogs <- function(previousDogs,currentDogs,portfolioValue)
   
   # *****TO DO: What if length = o?*****
   buyOrSell <- intersect(previousDogs$symbol,currentDogs$symbol)
-  # TO DO process remove these debugs
-  #message("buyOrSell: ")
-  #message(buyOrSell)
 
   # Make a new data frame from the symbols where I may need to buy or sell. Include the current
-  # include the current price per share, just for a sanity check calculation before selling.
+  # current price per share, just for a sanity check calculation before selling.
   # TO DO: not sure why, but I must specify columns c("symbol","price.per.share","num.shares") else I get a NA. column.
-  # NOTE: this is num.shares I currently own. I will overwrite this with the num.shares to buy/sell.
+  # NOTE: this is num.shares I currently own. I will overwrite this with the num.shares to buy or sell.
   buyOrSellDogsAndActions <- previousDogs[previousDogs$symbol %in% buyOrSell,c("symbol","price.per.share","num.shares")]
   
-  # TO DO ************** figure out the number of shares and the action ****************
+  # Calculate num.shares to buy or sell, overwrite the current num.shares column.
   # ((current.num.shares * current.price) - target)/current.price
+  # leave positive or negative for now, since I need it to derive "action"
+  buyOrSellDogsAndActions$num.shares <- round(((buyOrSellDogsAndActions$num.shares*buyOrSellDogsAndActions$price.per.share) - target)/buyOrSellDogsAndActions$price.per.share)
   # if negative, buy.
   # if positive, sell.
   # if 0, N/A
-  buyOrSellDogsAndActions$num.shares <- round(((buyOrSellDogsAndActions$num.shares*buyOrSellDogsAndActions$price.per.share) - target)/buyOrSellDogsAndActions$price.per.share)
-  #message("foo: ")
-  #message(foo)
   # TO DO: 0 is SELL....fix that
   buyOrSellDogsAndActions$action <- ifelse(buyOrSellDogsAndActions$num.shares<0,"BUY","SELL")
-  #message("foobar: ")
-  #message(foobar)
+  # Now remove the positive or negative
   buyOrSellDogsAndActions$num.shares <- abs(buyOrSellDogsAndActions$num.shares)
-  
-  
-  
-  # TO DO remove this
-  #buyOrSellDogsAndActions$price.per.share <- "N/A"
-  #buyOrSellDogsAndActions$num.shares <-"1"
-  #buyOrSellDogsAndActions$action <-"FOO"
-  
-  #************study, use apply()**********
-  
+
   ####################################################### 
   # Combine the results and return
   #######################################################   
   
-  # TO DO combine the actions data frames
+  # combine the actions data frames
+  # TO DO: first column in this actions data frame has odd numbers. fix that.
   actionsDataFrame <- rbind(sellAllDogsAndActions,buyAllDogsAndActions)
   actionsDataFrame <- rbind(actionsDataFrame,buyOrSellDogsAndActions)
-  #message("sellAllDogsAndActions: ")
-  #message(sellAllDogsAndActions)
-  #message("buyAllDogsAndActions: ")
-  #message(buyAllDogsAndActions)
-  #message("buyOrSellDogsAndActions: ")
-  #message(buyOrSellDogsAndActions)
-  #message("actionsDataFrame: ")
-  #message(actionsDataFrame)
 
-  # TO DO: first column in this actions data frame has odd numbers. fix that.
-  
-  
-  # TO DO return the uber actions data frame (just using intermediate steps for now)
-  #return(currentDogs)
-  #return(buyAllDogsAndActions)
-  #return(sellAllDogsAndActions)
-  #return(buyOrSellDogsAndActions)
+  # return the uber actions data frame
   return(actionsDataFrame)
 }
 
 main <- function(currentTotalValue)
 {
+  #######################################################   
   # set up
+  ####################################################### 
     thisYear <- strftime(Sys.Date(),"%Y")
     lastYear <- as.character(as.integer(thisYear) - 1)
     # working directory.
@@ -241,7 +200,6 @@ main <- function(currentTotalValue)
   
   
   # TO DO
-  # compare the lists of dogs, create an action list from that
   # add num.shares to the current (2017) tab
   # do the calculations showing the change in portfolio value
   # handle multiple years
