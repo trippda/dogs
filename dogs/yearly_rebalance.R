@@ -139,29 +139,50 @@ processDogs <- function(previousDogs,currentDogs,portfolioValue)
 calcCurrentNumShares <- function (previousDogs,currentDogs,currentActions)
 {
   # TO DO this
+  # instead of below, 
+  # - copy currentActions to 
+  currentActionsWorkingCopy <- currentActions
+  # - order foo by symbol
+  currentActionsWorkingCopy <- currentActionsWorkingCopy[order(currentActionsWorkingCopy$symbol), ]
+  # - remove rows where num.shares.after.action = 0
+  #currentActionsWorkingCopy <- subset(currentActionsWorkingCopy, !symbol %in% unique)
+  currentActionsWorkingCopy <- currentActionsWorkingCopy[!(currentActionsWorkingCopy$num.shares.after.action == 0), ]
+  # - order currentDogs by symbol
+  currentDogs <- currentDogs[order(currentDogs$symbol), ]
+  # - put put foo$num.shares.after.action onto currentDogs$num.shares
+  message("currentDogs$num.shares: ")
+  message(currentDogs$num.shares)
+  message("currentActionsWorkingCopy$num.shares.after.action: ")
+  message(currentActionsWorkingCopy$num.shares.after.action)
+  currentDogs$num.shares <- currentActionsWorkingCopy$num.shares.after.action
+  # clean up column 1
+  rownames(currentDogs) <- c(1:nrow(currentDogs))
+  # - return currentDogs
+  # (function no longer needs previousDogs)
   
-  # TO DO move setdiff, intersect, other to a function? 
   
-  # first the new ("buy all") dogs
-  # *****TO DO: What if length = o?*****
-  buyAll <- setdiff(currentDogs$symbol,previousDogs$symbol)
-  # get num.shares for those new dogs from currentActions, write them in currentDogs
-  message("buyAll: ")
-  message(buyAll)
- 
-  foo <- currentActions[currentActions$symbol %in% buyAll,c("symbol","num.shares")]
-  message("foo: ")
-  message(foo)
-  message("currentDogs: ")
-  message(currentDogs)
+  ## TO DO move setdiff, intersect, other to a function? 
+  #
+  ## first the new ("buy all") dogs
+  ## *****TO DO: What if length = o?*****
+  #buyAll <- setdiff(currentDogs$symbol,previousDogs$symbol)
+  ## get num.shares for those new dogs from currentActions, write them in currentDogs
+  #message("buyAll: ")
+  #message(buyAll)
+  # 
+  #foo <- currentActions[currentActions$symbol %in% buyAll,c("symbol","num.shares")]
+  #message("foo: ")
+  #message(foo)
+  #message("currentDogs: ")
+  #message(currentDogs)
   
   
   
-  # then the buy or sell dogs
-  # *****TO DO: What if length = o?*****
-  buyOrSell <- intersect(previousDogs$symbol,currentDogs$symbol)
-  
-  # Nothing to do for the old ("sell all") dogs
+  ## then the buy or sell dogs
+  ## *****TO DO: What if length = o?*****
+  #buyOrSell <- intersect(previousDogs$symbol,currentDogs$symbol)
+  #
+  ## Nothing to do for the old ("sell all") dogs
   
   return(currentDogs)
 }
