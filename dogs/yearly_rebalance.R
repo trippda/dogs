@@ -108,16 +108,30 @@ processDogs <- function(previousDogs,currentDogs,portfolioValue)
 
   # Make a new data frame from the symbols where I may need to buy or sell. Include the current
   # include the current price per share, just for a sanity check calculation before selling.
-  # TO DO: not sure why, but I must specify columns c("symbol","price.per.share") else I get a NA. column.
-  buyOrSellDogsAndActions <- previousDogs[previousDogs$symbol %in% buyOrSell,c("symbol","price.per.share")]
+  # TO DO: not sure why, but I must specify columns c("symbol","price.per.share","num.shares") else I get a NA. column.
+  # NOTE: this is num.shares I currently own. I will overwrite this with the num.shares to buy/sell.
+  buyOrSellDogsAndActions <- previousDogs[previousDogs$symbol %in% buyOrSell,c("symbol","price.per.share","num.shares")]
   
   # TO DO ************** figure out the number of shares and the action ****************
+  # ((current.num.shares * current.price) - target)/current.price
+  # if negative, buy.
+  # if positive, sell.
+  # if 0, N/A
+  buyOrSellDogsAndActions$num.shares <- round(((buyOrSellDogsAndActions$num.shares*buyOrSellDogsAndActions$price.per.share) - target)/buyOrSellDogsAndActions$price.per.share)
+  #message("foo: ")
+  #message(foo)
+  # TO DO: 0 is SELL....fix that
+  buyOrSellDogsAndActions$action <- ifelse(buyOrSellDogsAndActions$num.shares<0,"BUY","SELL")
+  #message("foobar: ")
+  #message(foobar)
+  buyOrSellDogsAndActions$num.shares <- abs(buyOrSellDogsAndActions$num.shares)
+  
   
   
   # TO DO remove this
   #buyOrSellDogsAndActions$price.per.share <- "N/A"
-  buyOrSellDogsAndActions$num.shares <-"1"
-  buyOrSellDogsAndActions$action <-"FOO"
+  #buyOrSellDogsAndActions$num.shares <-"1"
+  #buyOrSellDogsAndActions$action <-"FOO"
   
   #************study, use apply()**********
   
@@ -137,6 +151,8 @@ processDogs <- function(previousDogs,currentDogs,portfolioValue)
   #message("actionsDataFrame: ")
   #message(actionsDataFrame)
 
+  # TO DO: first column in this actions data frame has odd numbers. fix that.
+  
   
   # TO DO return the uber actions data frame (just using intermediate steps for now)
   #return(currentDogs)
