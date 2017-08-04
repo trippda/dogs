@@ -63,6 +63,8 @@ processDogs <- function(previousDogs,currentDogs,portfolioValue)
   # include the current price per share, just for a sanity check calculation before selling.
   sellAllDogsAndActions <- previousDogs[previousDogs$symbol %in% sellAll,c("symbol","price.per.share","num.shares")]
   sellAllDogsAndActions$action <- "SELL"
+  # include the total I will own after executing the trade action (0, since I sell all)
+  sellAllDogsAndActions$num.shares.after.action <- 0
  
   ####################################################### 
   # Next, the new small dogs--ones I do not own any of yet: buy all (target value = 1/5 portfolio value)
@@ -80,6 +82,8 @@ processDogs <- function(previousDogs,currentDogs,portfolioValue)
   # number of shares to buy is 1/5 the portfolio value ("target") / current price, rounded
   buyAllDogsAndActions$num.shares <- round(target/buyAllDogsAndActions$price.per.share)
   buyAllDogsAndActions$action <- "BUY"
+  # include the total I will own after executing the trade action (same as num.shares, since I buy all)
+  buyAllDogsAndActions$num.shares.after.action <- buyAllDogsAndActions$num.shares
 
   ####################################################### 
   # Then, the dogs I own that are still small dogs: buy or sell some
@@ -94,10 +98,18 @@ processDogs <- function(previousDogs,currentDogs,portfolioValue)
   # NOTE: this is num.shares I currently own. I will overwrite this with the num.shares to buy or sell.
   buyOrSellDogsAndActions <- previousDogs[previousDogs$symbol %in% buyOrSell,c("symbol","price.per.share","num.shares")]
   
+  # TO DO
+  # hold on to num.shares I currently own in num.shares.after.action for now
+  buyOrSellDogsAndActions$num.shares.after.action <- buyOrSellDogsAndActions$num.shares
+  
   # Calculate num.shares to buy or sell, overwrite the current num.shares column.
   # ((current.num.shares * current.price) - target)/current.price
   # leave positive or negative for now, since I need it to derive "action"
   buyOrSellDogsAndActions$num.shares <- round(((buyOrSellDogsAndActions$num.shares*buyOrSellDogsAndActions$price.per.share) - target)/buyOrSellDogsAndActions$price.per.share)
+  # TO DO clean up, comment
+  # update num.shares.after.action to be the total
+  # TO DO understand the negative / subtraction - ** probable reverse the math above: target - foo, not foo - target
+  buyOrSellDogsAndActions$num.shares.after.action <- buyOrSellDogsAndActions$num.shares.after.action - buyOrSellDogsAndActions$num.shares
   # if negative, buy.
   # if positive, sell.
   # if 0, N/A
@@ -105,18 +117,53 @@ processDogs <- function(previousDogs,currentDogs,portfolioValue)
   buyOrSellDogsAndActions$action <- ifelse(buyOrSellDogsAndActions$num.shares<0,"BUY","SELL")
   # Now remove the positive or negative
   buyOrSellDogsAndActions$num.shares <- abs(buyOrSellDogsAndActions$num.shares)
+  # TO DO!!
+  # include the total I will own after executing the trade action (same as num.shares, since I buy all)
+  #buyOrSellDogsAndActions$num.shares.after.action <- 1
 
   ####################################################### 
   # Combine the results and return
   #######################################################   
   
   # combine the actions data frames
-  # TO DO: first column in this actions data frame has odd numbers. fix that.
   actionsDataFrame <- rbind(sellAllDogsAndActions,buyAllDogsAndActions)
   actionsDataFrame <- rbind(actionsDataFrame,buyOrSellDogsAndActions)
+  # TO DO: first column in this actions data frame has odd numbers. fix that for now with this hack.
+  rownames(actionsDataFrame) <- c(1:nrow(actionsDataFrame))
 
   # return the uber actions data frame
   return(actionsDataFrame)
+}
+
+# calculates the number of shares I will have of each current small dog, after I execute the actions (buy or sell)
+calcCurrentNumShares <- function (previousDogs,currentDogs,currentActions)
+{
+  # TO DO this
+  
+  # TO DO move setdiff, intersect, other to a function? 
+  
+  # first the new ("buy all") dogs
+  # *****TO DO: What if length = o?*****
+  buyAll <- setdiff(currentDogs$symbol,previousDogs$symbol)
+  # get num.shares for those new dogs from currentActions, write them in currentDogs
+  message("buyAll: ")
+  message(buyAll)
+ 
+  foo <- currentActions[currentActions$symbol %in% buyAll,c("symbol","num.shares")]
+  message("foo: ")
+  message(foo)
+  message("currentDogs: ")
+  message(currentDogs)
+  
+  
+  
+  # then the buy or sell dogs
+  # *****TO DO: What if length = o?*****
+  buyOrSell <- intersect(previousDogs$symbol,currentDogs$symbol)
+  
+  # Nothing to do for the old ("sell all") dogs
+  
+  return(currentDogs)
 }
 
 main <- function(currentTotalValue)
@@ -174,15 +221,18 @@ main <- function(currentTotalValue)
   colnames(currentSmallDogsDataFrame) <- c("symbol","price.per.share")
 
   # figure out what to buy or sell
-  # TO DO do not do the write above (?)
   actionsDataFrame <- processDogs(previousSmallDogs,currentSmallDogsDataFrame,currentTotalValue)
   
-  # TO DO: decide if I want to write this now
+  # write the symbols and actions for the year to a separate tab
+  # TO DO: move "readonly" to configuration
   if((as.character(args[2])!="readonly"))
   {
     write.xlsx(actionsDataFrame,smallDogsWorkingFileName,sheetName = paste(thisYear,"actions", sep = "-"),append = TRUE)
   }  
   
+  # add num.shares to the current dogs. num.shares is the number of shares I will have AFTER I
+  # execute the actions (buy or sell)
+  currentSmallDogsDataFrame <- calcCurrentNumShares(previousSmallDogs,currentSmallDogsDataFrame,actionsDataFrame)
   
   # write the new (current) dogs to excel, in a new worksheet
   # TO DO clean up / remove readonly flag
