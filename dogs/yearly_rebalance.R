@@ -166,26 +166,12 @@ main <- function(currentTotalValue)
   # convert currentSmallDogs dataframe into a character vector 
   currentSmallDogsCharVector <- currentSmallDogs[['Symbol']]
   
-  # get a quote for each small dog
-  # TO DO: use my getLast function instead
-  # TO DO: do I need that verbose flag?
-  currentSmallDogsQuotes <- getQuote( currentSmallDogsCharVector, verbose = TRUE)
-  
-  # I only need Last, not the full quote
-  currentSmallDogsQuotesLast <- currentSmallDogsQuotes$Last
+  # get a quote (LAST only) for each small dog
+  currentSmallDogsQuotesLast <- getLast(currentSmallDogsCharVector)
   
   # Create a clean data frame
   currentSmallDogsDataFrame <- data.frame(currentSmallDogsCharVector,currentSmallDogsQuotesLast)
   colnames(currentSmallDogsDataFrame) <- c("symbol","price.per.share")
-  
-  # write the new (current) dogs to excel, in a new worksheet
-  # TO DO clean up / remove readonly flag
-  # TO DO don't do this here (?)
-  # TO DO: fill in the num.shares column
-  if((as.character(args[2])!="readonly"))
-  {
-    write.xlsx(currentSmallDogsDataFrame,smallDogsWorkingFileName,sheetName = thisYear, append = TRUE)
-  }
 
   # figure out what to buy or sell
   # TO DO do not do the write above (?)
@@ -196,6 +182,17 @@ main <- function(currentTotalValue)
   {
     write.xlsx(actionsDataFrame,smallDogsWorkingFileName,sheetName = paste(thisYear,"actions", sep = "-"),append = TRUE)
   }  
+  
+  
+  # write the new (current) dogs to excel, in a new worksheet
+  # TO DO clean up / remove readonly flag
+  # TO DO don't do this here (?)
+  # TO DO: fill in the num.shares column
+  if((as.character(args[2])!="readonly"))
+  {
+    write.xlsx(currentSmallDogsDataFrame,smallDogsWorkingFileName,sheetName = thisYear, append = TRUE)
+  }
+  
   
   
   
