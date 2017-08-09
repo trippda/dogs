@@ -13,7 +13,7 @@ checkForPackages <- function()
 {
   # Load packages.
   bPackagesFound <- TRUE
-  pkgs <- c("XML","quantmod","xlsx")
+  pkgs <- c("XML","quantmod","xlsx","futile.logger")
   for(pkg in pkgs)
   {
     if(!suppressPackageStartupMessages(require(pkg, character.only = TRUE, quietly = TRUE, warn.conflicts = FALSE)))
@@ -23,6 +23,7 @@ checkForPackages <- function()
         bPackagesFound <- FALSE
       }
       missingPackageMessage <- paste0("***Package ", pkg, " is not installed. Install and try again.***")
+      # TO DO: flog
       warning(missingPackageMessage)
     } 
   }
@@ -136,30 +137,57 @@ processDogs <- function(previousDogs,currentDogs,portfolioValue)
 }
 
 # calculates the number of shares I will have of each current small dog, after I execute the actions (buy or sell)
-calcCurrentNumShares <- function (previousDogs,currentDogs,currentActions)
+calcCurrentNumShares <- function (currentDogs,currentActions)
 {
-  # TO DO this
-  # instead of below, 
-  # - copy currentActions to 
-  currentActionsWorkingCopy <- currentActions
-  # - order foo by symbol
-  currentActionsWorkingCopy <- currentActionsWorkingCopy[order(currentActionsWorkingCopy$symbol), ]
-  # - remove rows where num.shares.after.action = 0
-  #currentActionsWorkingCopy <- subset(currentActionsWorkingCopy, !symbol %in% unique)
-  currentActionsWorkingCopy <- currentActionsWorkingCopy[!(currentActionsWorkingCopy$num.shares.after.action == 0), ]
-  # - order currentDogs by symbol
-  currentDogs <- currentDogs[order(currentDogs$symbol), ]
-  # - put put foo$num.shares.after.action onto currentDogs$num.shares
-  message("currentDogs$num.shares: ")
-  message(currentDogs$num.shares)
-  message("currentActionsWorkingCopy$num.shares.after.action: ")
-  message(currentActionsWorkingCopy$num.shares.after.action)
-  currentDogs$num.shares <- currentActionsWorkingCopy$num.shares.after.action
-  # clean up column 1
-  rownames(currentDogs) <- c(1:nrow(currentDogs))
-  # - return currentDogs
-  # (function no longer needs previousDogs)
+  ## TO DO this
+  ## instead of below, 
+  ## - copy currentActions to 
+  #currentActionsWorkingCopy <- currentActions
+  ## - order foo by symbol
+  #currentActionsWorkingCopy <- currentActionsWorkingCopy[order(currentActionsWorkingCopy$symbol), ]
+  ## - remove rows where num.shares.after.action = 0
+  ##currentActionsWorkingCopy <- subset(currentActionsWorkingCopy, !symbol %in% unique)
+  #currentActionsWorkingCopy <- currentActionsWorkingCopy[!(currentActionsWorkingCopy$num.shares.after.action == 0), ]
+  ## - order currentDogs by symbol
+  #currentDogs <- currentDogs[order(currentDogs$symbol), ]
+  ## - put put foo$num.shares.after.action onto currentDogs$num.shares
+  #message("currentDogs$num.shares: ")
+  #message(currentDogs$num.shares)
+  #message("currentActionsWorkingCopy$num.shares.after.action: ")
+  #message(currentActionsWorkingCopy$num.shares.after.action)
+  #currentDogs$num.shares <- currentActionsWorkingCopy$num.shares.after.action
+  ## clean up column 1
+  #rownames(currentDogs) <- c(1:nrow(currentDogs))
+  ## - return currentDogs
+  ## (function no longer needs previousDogs)
   
+  # BETTER something like...
+  # remove num.shares.after.action = 0
+  #currentActionsWorkingCopy <- currentActionsWorkingCopy[!(currentActionsWorkingCopy$num.shares.after.action == 0), ]
+  # loop through??
+  # for i in len.currentActions
+  # currentDogs[currentAction$symbol,num.shares] <- currentActions[i,num.shares]
+  # MORE BETTER: don't remove 0 row. loop through current actions i. pull from currentActions i into currentDogs BAH lost it. IF currentActions$symbol == currentDogs$symbol, then currentDogs$num.shares<-currentActions$num.shares
+  for (s in currentDogs$symbol)
+  {
+    flog.debug("s is: %s", s)
+    #flog.debug("currentActions$s is: %s", currentActions$s)
+    flog.debug("currentActions[currentActions$symbol==s,\"num.shares.after.action\"] is: %s",currentActions[currentActions$symbol==s,"num.shares.after.action"])
+    flog.debug("VZ is: %s", currentActions[currentActions$symbol=="VZ","num.shares.after.action"])
+    flog.debug("PFE is: %s", currentActions[currentActions$symbol=="PFE","num.shares.after.action"])
+    flog.debug("MRK is: %s", currentActions[currentActions$symbol=="MRK","num.shares.after.action"])
+    flog.debug("CSCO is: %s", currentActions[currentActions$symbol=="CSCO","num.shares.after.action"])
+    flog.debug("KO is: %s", currentActions[currentActions$symbol=="KO","num.shares.after.action"])
+    #flog.debug("currentActions$symbol is: %s", currentActions$symbol)
+    #flog.debug("class(s): is %s",class(s))
+    #flog.debug("class(currentActions$symbol is: %s",class(currentActions$symbol))
+    #flog.debug("currentActions[currentActions$symbol==as.factor(s),\"num.shares\"] is: ",currentActions[currentActions$symbol==as.factor(s),"num.shares"])
+    #currentDogs$num.shares <- currentActions[currentActions$symbol == s,currentActions$num.shares]
+    #currentDogs$num.shares <- currentActions[currentActions$symbol==s,"num.shares"]
+    #currentDogs$num.shares <- currentActions[currentActions$as.factor(s),"num.shares"]
+    #currentDogs$num.shares <- currentActions[currentActions$s,"num.shares"]
+    currentDogs[currentDogs$symbol==s,"num.shares"] <- currentActions[currentActions$symbol==s,"num.shares.after.action"]    
+  }
   
   ## TO DO move setdiff, intersect, other to a function? 
   #
@@ -192,25 +220,32 @@ main <- function(currentTotalValue)
   #######################################################   
   # set up
   ####################################################### 
-    thisYear <- strftime(Sys.Date(),"%Y")
-    lastYear <- as.character(as.integer(thisYear) - 1)
-    # working directory.
-    # TO DO: configurable
-    # This doesn't work since Rscript has pwd as HOME
-    #setwd(paste0(Sys.getenv("HOME"),"/Documents/dogs"))
-    #message(paste0("home is ", Sys.getenv("HOME")))
-    setwd("C:/Users/Dan/Documents/dogs")
-    # working file
-    # TO DO: configurable
-    smallDogsWorkingFileName <- "SmallDogs.xlsx"
+  # working directory.
+  # TO DO: configurable **********use "config" https://cran.r-project.org/web/packages/config/vignettes/introduction.html
+  # This doesn't work since Rscript has pwd as HOME
+  #setwd(paste0(Sys.getenv("HOME"),"/Documents/dogs"))
+  #message(paste0("home is ", Sys.getenv("HOME")))
+  setwd("C:/Users/Dan/Documents/dogs")
   
+  #TO DO: set flog threshold from config.  **********use "config" https://cran.r-project.org/web/packages/config/vignettes/introduction.html 
+  # Make it INFO to start. Put tons in DEBUG.
+  flog.threshold(DEBUG)
+  flog.appender(appender.file("yearly_rebalance.log"))
+  
+  thisYear <- strftime(Sys.Date(),"%Y")
+  lastYear <- as.character(as.integer(thisYear) - 1)
+  flog.debug("This year is: %s",thisYear)
+  flog.debug("Last year is: %s",lastYear)
+
+  # working file
+  # TO DO: configurable
+  smallDogsWorkingFileName <- "SmallDogs.xlsx"
+  flog.info("working directory is: %s",getwd())
+  flog.info("working file (excel) is: %s",smallDogsWorkingFileName)
+
   # get last year's small dogs
-  # *****TO DO******
-  # separate sheets for each year, separate sheet for summary / calculations - perhaps that is the first sheet
-  
   previousSmallDogs <- read.xlsx(smallDogsWorkingFileName,sheetName = lastYear)
-  # TO DO: remove
-  #message(previousSmallDogs)
+  flog.debug("previousSmallDogs from excel file is: %s", previousSmallDogs)
   
   # URL to scrape (current year)
   currentDogsURL <- paste0("http://www.dogsofthedow.com/",thisYear,"-dogs-of-the-dow.htm")
@@ -253,12 +288,11 @@ main <- function(currentTotalValue)
   
   # add num.shares to the current dogs. num.shares is the number of shares I will have AFTER I
   # execute the actions (buy or sell)
-  currentSmallDogsDataFrame <- calcCurrentNumShares(previousSmallDogs,currentSmallDogsDataFrame,actionsDataFrame)
+  currentSmallDogsDataFrame <- calcCurrentNumShares(currentSmallDogsDataFrame,actionsDataFrame)
   
   # write the new (current) dogs to excel, in a new worksheet
   # TO DO clean up / remove readonly flag
   # TO DO don't do this here (?)
-  # TO DO: fill in the num.shares column
   if((as.character(args[2])!="readonly"))
   {
     write.xlsx(currentSmallDogsDataFrame,smallDogsWorkingFileName,sheetName = thisYear, append = TRUE)
@@ -266,13 +300,15 @@ main <- function(currentTotalValue)
   
   
   
-  
+  #######################################  
   # TO DO
-  # add num.shares to the current (2017) tab
+  #######################################
+  # real logging
   # do the calculations showing the change in portfolio value
   # handle multiple years
   # organize into functions, called from main
   # clean up the command line dev options ('readonly'). Move it to configuration.
+  # move file name and dir to configuration
   
 }
 
@@ -294,4 +330,5 @@ if (length(args) != 2)
   }
   #TBD: remove this
   message("***DONE ALL***")
+  #TO DO: nice out put saying where the file is
 }
