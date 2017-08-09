@@ -22,9 +22,7 @@ checkForPackages <- function()
       {
         bPackagesFound <- FALSE
       }
-      missingPackageMessage <- paste0("***Package ", pkg, " is not installed. Install and try again.***")
-      # TO DO: flog
-      warning(missingPackageMessage)
+      flog.fatal("***Package %s is not installed. Install and try again.***",pkg)
     } 
   }
   
@@ -99,28 +97,26 @@ processDogs <- function(previousDogs,currentDogs,portfolioValue)
   # NOTE: this is num.shares I currently own. I will overwrite this with the num.shares to buy or sell.
   buyOrSellDogsAndActions <- previousDogs[previousDogs$symbol %in% buyOrSell,c("symbol","price.per.share","num.shares")]
   
-  # TO DO
   # hold on to num.shares I currently own in num.shares.after.action for now
   buyOrSellDogsAndActions$num.shares.after.action <- buyOrSellDogsAndActions$num.shares
   
   # Calculate num.shares to buy or sell, overwrite the current num.shares column.
   # ((current.num.shares * current.price) - target)/current.price
-  # leave positive or negative for now, since I need it to derive "action"
+  # Leave positive / negative sign for now.
   buyOrSellDogsAndActions$num.shares <- round(((buyOrSellDogsAndActions$num.shares*buyOrSellDogsAndActions$price.per.share) - target)/buyOrSellDogsAndActions$price.per.share)
-  # TO DO clean up, comment
+
   # update num.shares.after.action to be the total
-  # TO DO understand the negative / subtraction - ** probable reverse the math above: target - foo, not foo - target
   buyOrSellDogsAndActions$num.shares.after.action <- buyOrSellDogsAndActions$num.shares.after.action - buyOrSellDogsAndActions$num.shares
+
+  # set the action based on num.share negative or positive.
   # if negative, buy.
   # if positive, sell.
   # if 0, N/A
   # TO DO: 0 is SELL....fix that
   buyOrSellDogsAndActions$action <- ifelse(buyOrSellDogsAndActions$num.shares<0,"BUY","SELL")
+  
   # Now remove the positive or negative
   buyOrSellDogsAndActions$num.shares <- abs(buyOrSellDogsAndActions$num.shares)
-  # TO DO!!
-  # include the total I will own after executing the trade action (same as num.shares, since I buy all)
-  #buyOrSellDogsAndActions$num.shares.after.action <- 1
 
   ####################################################### 
   # Combine the results and return
@@ -129,89 +125,25 @@ processDogs <- function(previousDogs,currentDogs,portfolioValue)
   # combine the actions data frames
   actionsDataFrame <- rbind(sellAllDogsAndActions,buyAllDogsAndActions)
   actionsDataFrame <- rbind(actionsDataFrame,buyOrSellDogsAndActions)
-  # TO DO: first column in this actions data frame has odd numbers. fix that for now with this hack.
+  # TO DO: first column in this actions data frame has odd numbers. 
+  # fix that for now with this hack.
   rownames(actionsDataFrame) <- c(1:nrow(actionsDataFrame))
 
   # return the uber actions data frame
   return(actionsDataFrame)
 }
 
-# calculates the number of shares I will have of each current small dog, after I execute the actions (buy or sell)
+# "calculates" (actually just moves to currentDogs) the number of shares I will have of each current small dog, after I execute the actions (buy or sell)
 calcCurrentNumShares <- function (currentDogs,currentActions)
 {
-  ## TO DO this
-  ## instead of below, 
-  ## - copy currentActions to 
-  #currentActionsWorkingCopy <- currentActions
-  ## - order foo by symbol
-  #currentActionsWorkingCopy <- currentActionsWorkingCopy[order(currentActionsWorkingCopy$symbol), ]
-  ## - remove rows where num.shares.after.action = 0
-  ##currentActionsWorkingCopy <- subset(currentActionsWorkingCopy, !symbol %in% unique)
-  #currentActionsWorkingCopy <- currentActionsWorkingCopy[!(currentActionsWorkingCopy$num.shares.after.action == 0), ]
-  ## - order currentDogs by symbol
-  #currentDogs <- currentDogs[order(currentDogs$symbol), ]
-  ## - put put foo$num.shares.after.action onto currentDogs$num.shares
-  #message("currentDogs$num.shares: ")
-  #message(currentDogs$num.shares)
-  #message("currentActionsWorkingCopy$num.shares.after.action: ")
-  #message(currentActionsWorkingCopy$num.shares.after.action)
-  #currentDogs$num.shares <- currentActionsWorkingCopy$num.shares.after.action
-  ## clean up column 1
-  #rownames(currentDogs) <- c(1:nrow(currentDogs))
-  ## - return currentDogs
-  ## (function no longer needs previousDogs)
-  
-  # BETTER something like...
-  # remove num.shares.after.action = 0
-  #currentActionsWorkingCopy <- currentActionsWorkingCopy[!(currentActionsWorkingCopy$num.shares.after.action == 0), ]
-  # loop through??
-  # for i in len.currentActions
-  # currentDogs[currentAction$symbol,num.shares] <- currentActions[i,num.shares]
-  # MORE BETTER: don't remove 0 row. loop through current actions i. pull from currentActions i into currentDogs BAH lost it. IF currentActions$symbol == currentDogs$symbol, then currentDogs$num.shares<-currentActions$num.shares
+  # Loop through the symbols in currentDogs. Put the corresponding num.shares.after.action from currentActions in num.shares.
   for (s in currentDogs$symbol)
   {
     flog.debug("s is: %s", s)
-    #flog.debug("currentActions$s is: %s", currentActions$s)
     flog.debug("currentActions[currentActions$symbol==s,\"num.shares.after.action\"] is: %s",currentActions[currentActions$symbol==s,"num.shares.after.action"])
-    flog.debug("VZ is: %s", currentActions[currentActions$symbol=="VZ","num.shares.after.action"])
-    flog.debug("PFE is: %s", currentActions[currentActions$symbol=="PFE","num.shares.after.action"])
-    flog.debug("MRK is: %s", currentActions[currentActions$symbol=="MRK","num.shares.after.action"])
-    flog.debug("CSCO is: %s", currentActions[currentActions$symbol=="CSCO","num.shares.after.action"])
-    flog.debug("KO is: %s", currentActions[currentActions$symbol=="KO","num.shares.after.action"])
-    #flog.debug("currentActions$symbol is: %s", currentActions$symbol)
-    #flog.debug("class(s): is %s",class(s))
-    #flog.debug("class(currentActions$symbol is: %s",class(currentActions$symbol))
-    #flog.debug("currentActions[currentActions$symbol==as.factor(s),\"num.shares\"] is: ",currentActions[currentActions$symbol==as.factor(s),"num.shares"])
-    #currentDogs$num.shares <- currentActions[currentActions$symbol == s,currentActions$num.shares]
-    #currentDogs$num.shares <- currentActions[currentActions$symbol==s,"num.shares"]
-    #currentDogs$num.shares <- currentActions[currentActions$as.factor(s),"num.shares"]
-    #currentDogs$num.shares <- currentActions[currentActions$s,"num.shares"]
     currentDogs[currentDogs$symbol==s,"num.shares"] <- currentActions[currentActions$symbol==s,"num.shares.after.action"]    
   }
-  
-  ## TO DO move setdiff, intersect, other to a function? 
-  #
-  ## first the new ("buy all") dogs
-  ## *****TO DO: What if length = o?*****
-  #buyAll <- setdiff(currentDogs$symbol,previousDogs$symbol)
-  ## get num.shares for those new dogs from currentActions, write them in currentDogs
-  #message("buyAll: ")
-  #message(buyAll)
-  # 
-  #foo <- currentActions[currentActions$symbol %in% buyAll,c("symbol","num.shares")]
-  #message("foo: ")
-  #message(foo)
-  #message("currentDogs: ")
-  #message(currentDogs)
-  
-  
-  
-  ## then the buy or sell dogs
-  ## *****TO DO: What if length = o?*****
-  #buyOrSell <- intersect(previousDogs$symbol,currentDogs$symbol)
-  #
-  ## Nothing to do for the old ("sell all") dogs
-  
+
   return(currentDogs)
 }
 
@@ -227,10 +159,14 @@ main <- function(currentTotalValue)
   #message(paste0("home is ", Sys.getenv("HOME")))
   setwd("C:/Users/Dan/Documents/dogs")
   
+  # logging
   #TO DO: set flog threshold from config.  **********use "config" https://cran.r-project.org/web/packages/config/vignettes/introduction.html 
   # Make it INFO to start. Put tons in DEBUG.
   flog.threshold(DEBUG)
   flog.appender(appender.file("yearly_rebalance.log"))
+  #TO DO: figure out why f (function) here does not work.
+  layout <- layout.format('~l [~t] [f:~f] ~m')
+  flog.layout(layout)
   
   thisYear <- strftime(Sys.Date(),"%Y")
   lastYear <- as.character(as.integer(thisYear) - 1)
@@ -303,12 +239,11 @@ main <- function(currentTotalValue)
   #######################################  
   # TO DO
   #######################################
-  # real logging
   # do the calculations showing the change in portfolio value
-  # handle multiple years
-  # organize into functions, called from main
-  # clean up the command line dev options ('readonly'). Move it to configuration.
   # move file name and dir to configuration
+  # clean up the command line dev options ('readonly'). Move it to configuration.
+  # handle / test multiple years
+  # organize into functions, called from main
   
 }
 
@@ -325,8 +260,6 @@ if (length(args) != 2)
   if(goToMain)
   {
     main(args[1])
-    # TBD remove
-    message("DONE MAIN")
   }
   #TBD: remove this
   message("***DONE ALL***")
