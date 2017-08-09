@@ -147,7 +147,7 @@ calcCurrentNumShares <- function (currentDogs,currentActions)
   return(currentDogs)
 }
 
-updateSummary <- function(summarySheet)
+updateSummary <- function(summarySheet, currentTotalValue)
 {
   # TO DO: this
   return(summarySheet)
@@ -187,9 +187,16 @@ main <- function(currentTotalValue)
   flog.info("working file (excel) is: %s",smallDogsWorkingFileName)
   flog.debug("summary sheet name is: %s",summarySheetName)
 
+  #######################################################   
   # get last year's small dogs
+  #######################################################   
+  
   previousSmallDogs <- read.xlsx(smallDogsWorkingFileName,sheetName = lastYear)
   flog.debug("previousSmallDogs from excel file is: %s", previousSmallDogs)
+  
+  #######################################################   
+  # get this year's small dogs
+  #######################################################   
   
   # URL to scrape (current year)
   currentDogsURL <- paste0("http://www.dogsofthedow.com/",thisYear,"-dogs-of-the-dow.htm")
@@ -210,6 +217,10 @@ main <- function(currentTotalValue)
   names(tables) <-gsub(" ",".",names(tables))
   currentSmallDogs <- subset(tables, Small.Dog == "Yes", Symbol)
   
+  #######################################################   
+  # get a quote for each current small dog
+  #######################################################   
+  
   # convert currentSmallDogs dataframe into a character vector 
   currentSmallDogsCharVector <- currentSmallDogs[['Symbol']]
   
@@ -220,8 +231,15 @@ main <- function(currentTotalValue)
   currentSmallDogsDataFrame <- data.frame(currentSmallDogsCharVector,currentSmallDogsQuotesLast)
   colnames(currentSmallDogsDataFrame) <- c("symbol","price.per.share")
 
+  #######################################################   
   # figure out what to buy or sell
+  #######################################################   
+  
   actionsDataFrame <- processDogs(previousSmallDogs,currentSmallDogsDataFrame,currentTotalValue)
+  
+  #######################################################   
+  # set up for next year: currentDogs will be previousDogs
+  #######################################################   
   
   # add num.shares to the current dogs. num.shares is the number of shares I will have AFTER I
   # execute the actions (buy or sell)
@@ -236,24 +254,28 @@ main <- function(currentTotalValue)
   flog.debug("initially read summary: %s",summarySheet)
   
   # update with this year's data
-  summarySheet <- updateSummary(summarySheet)
+  summarySheet <- updateSummary(summarySheet, currentTotalValue)
   
   ####################################################### 
   # Record all of this in excel
   ####################################################### 
 
   # write the updated summary to excel (revise the current sheet)
-  # TO DO: each revision is adding a new "index" column (integers)
+  # TO DO: first column header is NA. in spite of showNA = FALSE
+  # TO DO: pretty this up - column widths, number formats
   workbook <- loadWorkbook(smallDogsWorkingFileName)
   workbook$setForceFormulaRecalculation(TRUE)
   s <- getSheets(workbook)[[1]]
-  addDataFrame(summarySheet, sheet=s)
+  headerStyle <- CellStyle(workbook) + Font(workbook, isBold=TRUE) 
+  addDataFrame(summarySheet, sheet=s, row.names = FALSE, showNA = FALSE, colnamesStyle = headerStyle)
   saveWorkbook(workbook, file = smallDogsWorkingFileName)
 
   # write the symbols and actions for the year in a new "actions" worksheet
+  # TO DO: pretty up the formatting
   write.xlsx(actionsDataFrame,smallDogsWorkingFileName,sheetName = paste(thisYear,"actions", sep = "-"),append = TRUE)
   
   # write the new (current) dogs in a new worksheet
+  # TO DO: pretty up the formatting
   write.xlsx(currentSmallDogsDataFrame,smallDogsWorkingFileName,sheetName = thisYear, append = TRUE)
   
     #######################################  
@@ -264,6 +286,7 @@ main <- function(currentTotalValue)
   # clean up the command line dev options ('readonly'). Move it to configuration.
   # handle / test multiple years
   # organize into functions, called from main
+  # pretty up the spreadsheet formatting
   
 }
 
