@@ -147,6 +147,12 @@ calcCurrentNumShares <- function (currentDogs,currentActions)
   return(currentDogs)
 }
 
+updateSummary <- function(summarySheet)
+{
+  # TO DO: this
+  return(summarySheet)
+}
+
 main <- function(currentTotalValue)
 {
   #######################################################   
@@ -165,19 +171,21 @@ main <- function(currentTotalValue)
   flog.threshold(DEBUG)
   flog.appender(appender.file("yearly_rebalance.log"))
   #TO DO: figure out why f (function) here does not work.
-  layout <- layout.format('~l [~t] [f:~f] ~m')
-  flog.layout(layout)
+  #layout <- layout.format('~l [~t] [f:~f] ~m')
+  #flog.layout(layout)
   
   thisYear <- strftime(Sys.Date(),"%Y")
   lastYear <- as.character(as.integer(thisYear) - 1)
   flog.debug("This year is: %s",thisYear)
   flog.debug("Last year is: %s",lastYear)
 
-  # working file
+  # working file, summary sheet
   # TO DO: configurable
   smallDogsWorkingFileName <- "SmallDogs.xlsx"
+  summarySheetName <- "summary"
   flog.info("working directory is: %s",getwd())
   flog.info("working file (excel) is: %s",smallDogsWorkingFileName)
+  flog.debug("summary sheet name is: %s",summarySheetName)
 
   # get last year's small dogs
   previousSmallDogs <- read.xlsx(smallDogsWorkingFileName,sheetName = lastYear)
@@ -215,28 +223,40 @@ main <- function(currentTotalValue)
   # figure out what to buy or sell
   actionsDataFrame <- processDogs(previousSmallDogs,currentSmallDogsDataFrame,currentTotalValue)
   
-  # write the symbols and actions for the year to a separate tab
-  # TO DO: move "readonly" to configuration
-  if((as.character(args[2])!="readonly"))
-  {
-    write.xlsx(actionsDataFrame,smallDogsWorkingFileName,sheetName = paste(thisYear,"actions", sep = "-"),append = TRUE)
-  }  
-  
   # add num.shares to the current dogs. num.shares is the number of shares I will have AFTER I
   # execute the actions (buy or sell)
   currentSmallDogsDataFrame <- calcCurrentNumShares(currentSmallDogsDataFrame,actionsDataFrame)
   
-  # write the new (current) dogs to excel, in a new worksheet
-  # TO DO clean up / remove readonly flag
-  # TO DO don't do this here (?)
-  if((as.character(args[2])!="readonly"))
-  {
-    write.xlsx(currentSmallDogsDataFrame,smallDogsWorkingFileName,sheetName = thisYear, append = TRUE)
-  }
+  ####################################################### 
+  # update the summary table
+  ####################################################### 
   
+  # get the current summary
+  summarySheet <- read.xlsx(smallDogsWorkingFileName, sheetName = summarySheetName)
+  flog.debug("initially read summary: %s",summarySheet)
   
+  # update with this year's data
+  summarySheet <- updateSummary(summarySheet)
   
-  #######################################  
+  ####################################################### 
+  # Record all of this in excel
+  ####################################################### 
+
+  # write the updated summary to excel (revise the current sheet)
+  # TO DO: each revision is adding a new "index" column (integers)
+  workbook <- loadWorkbook(smallDogsWorkingFileName)
+  workbook$setForceFormulaRecalculation(TRUE)
+  s <- getSheets(workbook)[[1]]
+  addDataFrame(summarySheet, sheet=s)
+  saveWorkbook(workbook, file = smallDogsWorkingFileName)
+
+  # write the symbols and actions for the year in a new "actions" worksheet
+  write.xlsx(actionsDataFrame,smallDogsWorkingFileName,sheetName = paste(thisYear,"actions", sep = "-"),append = TRUE)
+  
+  # write the new (current) dogs in a new worksheet
+  write.xlsx(currentSmallDogsDataFrame,smallDogsWorkingFileName,sheetName = thisYear, append = TRUE)
+  
+    #######################################  
   # TO DO
   #######################################
   # do the calculations showing the change in portfolio value
