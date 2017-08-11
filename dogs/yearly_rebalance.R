@@ -148,15 +148,15 @@ calcCurrentNumShares <- function (currentDogs,currentActions)
 }
 
 # adds the current year summary stats to the summarySheet datafile
-updateSummary <- function(summarySheet, currentTotalValue, currentSmallDogsDataFrame, lastYear, thisYear)
+updateSummary <- function(summarySheet, currentTotalValue, previousDogs, lastYear, thisYear)
 {
 
   ####################################################### 
-  # portfolio total (start): the value of the portfolio on the day I rebalance, AFTER I rebalance
+  # portfolio total (start): the value of the portfolio at the start of last year
   ####################################################### 
   
   # price.per.share * num.shares for each item
-  portfolioItemValues <- currentSmallDogsDataFrame$price.per.share * currentSmallDogsDataFrame$num.shares
+  portfolioItemValues <- previousDogs$price.per.share * previousDogs$num.shares
   flog.debug("portfolioItemValues: ", portfolioItemValues, capture = TRUE)
   
   # add those products
@@ -164,7 +164,7 @@ updateSummary <- function(summarySheet, currentTotalValue, currentSmallDogsDataF
   flog.debug("portfolioSum: %s", portfolioSum)
   
   ####################################################### 
-  # portfolio average (start): AFTER rebalance
+  # portfolio average (start): 
   #######################################################
   
   # portfolio sum / 5
@@ -178,31 +178,32 @@ updateSummary <- function(summarySheet, currentTotalValue, currentSmallDogsDataF
   currentTotalValue <- as.numeric(currentTotalValue)
   
   ####################################################### 
-  # previous year average (end), coming year target
+  # previous year average (end), this year target
   #######################################################
   
-  currentYearAverage <- currentTotalValue / 5
+  currentAverage <- currentTotalValue / 5
   
   ####################################################### 
   # assemble into a data frame, add to summary sheet
   ####################################################### 
   
   # description column
-  descriptionColumn <- c(paste0(lastYear," total (start)"),paste0(lastYear," average (start)"),paste0(lastYear," total (end)"),paste0(lastYear," average (end), ",thisYear, " target"))
+  #descriptionColumn <- c(paste0(lastYear," total (start)"),paste0(lastYear," average (start)"),paste0(lastYear," total (end)"),paste0(lastYear," average (end), ",thisYear, " target"))
+  descriptionColumn <- c(paste0(lastYear," total (start)"),paste0(lastYear," average (start)"),paste0(lastYear," total (end)"))
   
   # value column
-  valueColumn <- c(round(portfolioSum,2),round(portfolioAverage,2),round(currentTotalValue))
+  valueColumn <- c(round(portfolioSum,2),round(portfolioAverage,2),round(currentTotalValue,2))
   
   # combine into a data frame
-  currentYearSummary <- data.frame(descriptionColumn,valueColumn)
+  yearlySummary <- data.frame(descriptionColumn,valueColumn)
   
   # column names
-  names(currentYearSummary) <- c("Description","Value")
-  flog.debug("currentYearSummary: ",currentYearSummary, capture = TRUE)
+  names(yearlySummary) <- c("Description","Value")
+  flog.debug("yearlySummary: ",yearlySummary, capture = TRUE)
   
   # add to summarySheet
   flog.debug("summarySheet before rbind: ",summarySheet, capture = TRUE)
-  summarySheet <- rbind(currentYearSummary,summarySheet)
+  summarySheet <- rbind(yearlySummary,summarySheet)
   flog.debug("summarySheet after rbind: ",summarySheet, capture = TRUE)
   
   return(summarySheet)
@@ -312,7 +313,7 @@ main <- function(currentTotalValue)
   flog.debug("summary after dropping NA. column: ", summarySheet, capture = TRUE)
   
   # update with this year's data
-  summarySheet <- updateSummary(summarySheet, currentTotalValue, currentSmallDogsDataFrame, lastYear, thisYear)
+  summarySheet <- updateSummary(summarySheet, currentTotalValue, previousSmallDogs, lastYear, thisYear)
   
   ####################################################### 
   # Record all of this in excel
