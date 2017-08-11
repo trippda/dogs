@@ -147,8 +147,40 @@ calcCurrentNumShares <- function (currentDogs,currentActions)
   return(currentDogs)
 }
 
-updateSummary <- function(summarySheet, currentTotalValue)
+# adds the current year summary stats to the summarySheet datafile
+updateSummary <- function(summarySheet, currentTotalValue, currentSmallDogsDataFrame, thisYear)
 {
+  #**********TO DO: does not need currentTotalValue
+  
+  # column names used for all
+  summaryColumnNames <- c("Description","Value")
+  
+  ####################################################### 
+  # YYYY total (start)
+  ####################################################### 
+  
+  # price.per.share * num.shares for each item
+  portfolioItemValues <- currentSmallDogsDataFrame$price.per.share * currentSmallDogsDataFrame$num.shares
+  flog.debug("portfolioItemValues: ", portfolioItemValues, capture = TRUE)
+  
+  # add those products
+  portfolioSum <- sum(portfolioItemValues,na.rm = TRUE)
+  flog.debug("portfolioSum: %s", portfolioSum)
+  
+  # put in a data frame
+  YyyyTotalStart <- data.frame(paste0(thisYear," total (start)"),portfolioSum)
+  names(YyyyTotalStart) <- summaryColumnNames
+  
+  flog.debug("names(summarySheet): ",names(summarySheet), capture = TRUE)
+  flog.debug("names(YyyyTotalStart): ",names(YyyyTotalStart), capture = TRUE)
+  flog.debug("YyyyTotalStart: ",YyyyTotalStart, capture = TRUE)
+  flog.debug("summarySheet before rbind: ",summarySheet, capture = TRUE)
+  
+  # add to summarySheet
+  summarySheet <- rbind(YyyyTotalStart,summarySheet)
+  flog.debug("summarySheet after rbind: ",summarySheet, capture = TRUE)
+  
+  
   # TO DO: this
   return(summarySheet)
 }
@@ -251,10 +283,13 @@ main <- function(currentTotalValue)
   
   # get the current summary
   summarySheet <- read.xlsx(smallDogsWorkingFileName, sheetName = summarySheetName)
-  flog.debug("initially read summary: %s",summarySheet)
+  flog.debug("initially read summary: ",summarySheet, capture = TRUE)
+  # delete/drop the NA. column TO DO: some better way to do this (avoid the NA. column in the first place)
+  summarySheet$NA. <- NULL
+  flog.debug("summary after dropping NA. column: ", summarySheet, capture = TRUE)
   
   # update with this year's data
-  summarySheet <- updateSummary(summarySheet, currentTotalValue)
+  summarySheet <- updateSummary(summarySheet, currentTotalValue, currentSmallDogsDataFrame, thisYear)
   
   ####################################################### 
   # Record all of this in excel
@@ -262,6 +297,7 @@ main <- function(currentTotalValue)
 
   # write the updated summary to excel (revise the current sheet)
   # TO DO: first column header is NA. in spite of showNA = FALSE
+  #     **consider deleting that NA. column**
   # TO DO: pretty this up - column widths, number formats
   workbook <- loadWorkbook(smallDogsWorkingFileName)
   workbook$setForceFormulaRecalculation(TRUE)
@@ -284,8 +320,10 @@ main <- function(currentTotalValue)
   # do the calculations showing the change in portfolio value
   # move file name and dir to configuration
   # clean up the command line dev options ('readonly'). Move it to configuration.
+  # len = 0 issues
   # handle / test multiple years
   # organize into functions, called from main
+  # update to R 3.3.3
   # pretty up the spreadsheet formatting
   
 }
