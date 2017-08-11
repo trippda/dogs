@@ -13,7 +13,7 @@ checkForPackages <- function()
 {
   # Load packages.
   bPackagesFound <- TRUE
-  pkgs <- c("XML","quantmod","xlsx","futile.logger")
+  pkgs <- c("XML","quantmod","xlsx","futile.logger","config")
   for(pkg in pkgs)
   {
     if(!suppressPackageStartupMessages(require(pkg, character.only = TRUE, quietly = TRUE, warn.conflicts = FALSE)))
@@ -217,48 +217,47 @@ main <- function(currentTotalValue)
   #######################################################   
   # set up
   ####################################################### 
-  # working directory.
-  # TO DO: configurable **********use "config" https://cran.r-project.org/web/packages/config/vignettes/introduction.html
-  # This doesn't work since Rscript has pwd as HOME
-  #setwd(paste0(Sys.getenv("HOME"),"/Documents/dogs"))
-  #message(paste0("home is ", Sys.getenv("HOME")))
-  setwd("C:/Users/Dan/Documents/dogs")
   
+  # read config
+  config <- config::get(file = ".\\yearly_rebalance_config.yml", use_parent = FALSE)
+
   # logging
-  #TO DO: set flog threshold from config.  **********use "config" https://cran.r-project.org/web/packages/config/vignettes/introduction.html 
-  # Make it INFO to start. Put tons in DEBUG.
-  flog.threshold(DEBUG)
-  flog.appender(appender.file("yearly_rebalance.log"))
+  #   level
+  flog.threshold(config$debugLevel)
+  #   directory for logging AND excel output / input
+  setwd(config$workingDirectory)
+  #   log file name
+  flog.appender(appender.file(config$logFileName))
   #TO DO: figure out why f (function) here does not work.
   #layout <- layout.format('~l [~t] [f:~f] ~m')
   #flog.layout(layout)
-  
+  flog.info("debug level: %s",config$debugLevel)
+
   thisYear <- strftime(Sys.Date(),"%Y")
   lastYear <- as.character(as.integer(thisYear) - 1)
   flog.debug("This year is: %s",thisYear)
   flog.debug("Last year is: %s",lastYear)
 
   # working file, summary sheet
-  # TO DO: configurable
-  smallDogsWorkingFileName <- "SmallDogs.xlsx"
-  summarySheetName <- "summary"
-  flog.info("working directory is: %s",getwd())
-  flog.info("working file (excel) is: %s",smallDogsWorkingFileName)
-  flog.debug("summary sheet name is: %s",summarySheetName)
+  smallDogsWorkingFileName <- config$excelFileName
+  summarySheetName <- config$summarySheetName
+  flog.info("working directory: %s",getwd())
+  flog.info("working file (excel): %s",smallDogsWorkingFileName)
+  flog.debug("summary sheet name: %s",summarySheetName)
 
   #######################################################   
   # get last year's small dogs
   #######################################################   
   
   previousSmallDogs <- read.xlsx(smallDogsWorkingFileName,sheetName = lastYear)
-  flog.debug("previousSmallDogs from excel file is: %s", previousSmallDogs)
+  flog.debug("previousSmallDogs from excel file is: ", previousSmallDogs, capture = TRUE)
   
   #######################################################   
   # get this year's small dogs
   #######################################################   
   
   # URL to scrape (current year)
-  currentDogsURL <- paste0("http://www.dogsofthedow.com/",thisYear,"-dogs-of-the-dow.htm")
+  currentDogsURL <- paste0(config$dogsSite,thisYear,config$dogsPageNameSuffix)
   
   # get the page. 
   # fyi I read that useInternalNodes = TRUE is ignored for HTML docs, but readHTMLTable below fails without it.
@@ -269,7 +268,7 @@ main <- function(currentTotalValue)
   
   # get table #12 as a dataframe
   # (skip the row below the header row - it is meta info I do not want/need
-  tables <- readHTMLTable(currentDogs.html,skip.rows = 2,stringsAsFactors=FALSE, which = 12)
+  tables <- readHTMLTable(currentDogs.html,skip.rows = 2,stringsAsFactors=FALSE, which = config$dogsTableIndex)
   
   # select only the small dogs.
   # spaces in column names are problematic, so get rid of those first
@@ -341,7 +340,6 @@ main <- function(currentTotalValue)
     #######################################  
   # TO DO
   #######################################
-  # move file name and dir to configuration
   # clean up the command line dev options ('readonly'). Move it to configuration.
   # len = 0 issues
   # handle / test multiple years

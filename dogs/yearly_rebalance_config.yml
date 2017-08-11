@@ -1,0 +1,15 @@
+default:
+        debugLevel: INFO
+        # debugLevel: DEBUG
+        # directory for logging AND excel input / output
+        workingDirectory: "C:/Users/Dan/Documents/dogs"
+        logFileName: "yearly_rebalance.log"
+        excelFileName: "SmallDogs.xlsx"
+        summarySheetName: "summary"
+        # Dogs of the dow site. Used to scrape the current small dog symbols
+        # Trailing forward slash is required.
+        dogsSite: "http://www.dogsofthedow.com/"
+        # Currently, page starts the year. For example, "2017-dogs-of-the-dow.htm"
+        dogsPageNameSuffix: "-dogs-of-the-dow.htm"
+        # Index of table on the small dogs page
+        dogsTableIndex: 12
