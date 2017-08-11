@@ -156,19 +156,19 @@ updateSummary <- function(summarySheet, currentTotalValue, previousDogs, lastYea
   ####################################################### 
   
   # price.per.share * num.shares for each item
-  portfolioItemValues <- previousDogs$price.per.share * previousDogs$num.shares
-  flog.debug("portfolioItemValues: ", portfolioItemValues, capture = TRUE)
+  portfolioStartValues <- previousDogs$price.per.share * previousDogs$num.shares
+  flog.debug("portfolioStartValues: ", portfolioStartValues, capture = TRUE)
   
   # add those products
-  portfolioSum <- sum(portfolioItemValues,na.rm = TRUE)
-  flog.debug("portfolioSum: %s", portfolioSum)
+  portfolioStartSum <- sum(portfolioStartValues,na.rm = TRUE)
+  flog.debug("portfolioSum: %s", portfolioStartSum)
   
   ####################################################### 
   # portfolio average (start): 
   #######################################################
   
   # portfolio sum / 5
-  portfolioAverage <- portfolioSum / 5
+  portfolioAverage <- portfolioStartSum / 5
   
   ####################################################### 
   # previous year total (end): the value of the portfolio on the day I rebalance, BEFORE I rebalance)
@@ -180,19 +180,22 @@ updateSummary <- function(summarySheet, currentTotalValue, previousDogs, lastYea
   ####################################################### 
   # previous year average (end), this year target
   #######################################################
-  
   currentAverage <- currentTotalValue / 5
+
+  ####################################################### 
+  # previous year average gain / loss (percent)
+  #######################################################
+  percentGainOrLoss <- ((currentTotalValue - portfolioStartSum)/currentTotalValue)*100
   
   ####################################################### 
   # assemble into a data frame, add to summary sheet
   ####################################################### 
   
   # description column
-  #descriptionColumn <- c(paste0(lastYear," total (start)"),paste0(lastYear," average (start)"),paste0(lastYear," total (end)"),paste0(lastYear," average (end), ",thisYear, " target"))
-  descriptionColumn <- c(paste0(lastYear," total (start)"),paste0(lastYear," average (start)"),paste0(lastYear," total (end)"))
-  
+  descriptionColumn <- c(paste0(lastYear," total (start)"),paste0(lastYear," average (start)"),paste0(lastYear," total (end)"),paste0(lastYear," average (end), ",thisYear, " target"),paste0(lastYear," gain/loss (%)"))
+
   # value column
-  valueColumn <- c(round(portfolioSum,2),round(portfolioAverage,2),round(currentTotalValue,2))
+  valueColumn <- c(round(portfolioStartSum,2),round(portfolioAverage,2),round(currentTotalValue,2),round(currentAverage,2),round(percentGainOrLoss,2))
   
   # combine into a data frame
   yearlySummary <- data.frame(descriptionColumn,valueColumn)
@@ -319,9 +322,6 @@ main <- function(currentTotalValue)
   # Record all of this in excel
   ####################################################### 
 
-  # write the updated summary to excel (revise the current sheet)
-  # TO DO: first column header is NA. in spite of showNA = FALSE
-  #     **consider deleting that NA. column**
   # TO DO: pretty this up - column widths, number formats
   workbook <- loadWorkbook(smallDogsWorkingFileName)
   workbook$setForceFormulaRecalculation(TRUE)
@@ -341,7 +341,6 @@ main <- function(currentTotalValue)
     #######################################  
   # TO DO
   #######################################
-  # do the calculations showing the change in portfolio value
   # move file name and dir to configuration
   # clean up the command line dev options ('readonly'). Move it to configuration.
   # len = 0 issues
@@ -349,6 +348,7 @@ main <- function(currentTotalValue)
   # organize into functions, called from main
   # update to R 3.3.3
   # pretty up the spreadsheet formatting
+  # ******initialize SmallDogs.xlsx with existing data, ready for march 2018 rebalance*****
   
 }
 
