@@ -5,9 +5,17 @@
 # Usage: Rscript yearly_rebalance.R <TotalValueOfDogsToday>
 ##############################################################################################
 
-# TO DO: Get TotalValueOfDogsToday from Ameritrade. Api access is very expensive, but this article says I can use httr:
+#######################################  
+# TO DO
+#######################################
+# len = 0 issues
+# handle / test multiple years
+# organize into functions, called from main
+# update to R 3.3.3
+# pretty up the spreadsheet formatting
+# ******initialize SmallDogs.xlsx with existing data, ready for march 2018 rebalance*****
+# get TotalValueOfDogsToday from Ameritrade. Api access is very expensive, but this article says I can use httr:
 #   https://stackoverflow.com/questions/10692066/how-to-webscrape-secured-pages-in-r-https-links-using-readhtmltable-from-xml
-# TO DO: option to run interactively, prompting for input rather than cmd line--though, from what I understand, that is not really what R scripts do.
 
 checkForPackages <- function()
 {
@@ -337,26 +345,19 @@ main <- function(currentTotalValue)
   # TO DO: pretty up the formatting
   write.xlsx(currentSmallDogsDataFrame,smallDogsWorkingFileName,sheetName = thisYear, append = TRUE)
   
-    #######################################  
-  # TO DO
-  #######################################
-  # clean up the command line dev options ('readonly'). Move it to configuration.
-  # len = 0 issues
-  # handle / test multiple years
-  # organize into functions, called from main
-  # update to R 3.3.3
-  # pretty up the spreadsheet formatting
-  # ******initialize SmallDogs.xlsx with existing data, ready for march 2018 rebalance*****
+  ####################################################### 
+  # "all done" message
+  #######################################################
   
+  message(paste0("Done. See ",smallDogsWorkingFileName, " for buy/sell actions required and yearly summary.")) 
 }
 
 # get required input
-# TO DO: remove dev flag options (move to config)
 args <- commandArgs(TRUE)
-if (length(args) != 2)
+if (length(args) != 1)
 {
   message("Usage: ")
-  message("       Rscript yearly_rebalance.R <TotalValueOfDogsToday> <readonly|foo>")
+  message("       Rscript yearly_rebalance.R <TotalValueOfDogsToday>")
 } else {
   # confirm dependencies
   goToMain <- checkForPackages()
@@ -364,7 +365,4 @@ if (length(args) != 2)
   {
     main(args[1])
   }
-  #TBD: remove this
-  message("***DONE ALL***")
-  #TO DO: nice out put saying where the file is
 }
