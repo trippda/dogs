@@ -11,7 +11,6 @@
 # len = 0 issues
 # handle / test multiple years
 # organize into functions, called from main
-# update to R 3.3.3
 # pretty up the spreadsheet formatting
 # ******initialize SmallDogs.xlsx with existing data, ready for march 2018 rebalance*****
 # get TotalValueOfDogsToday from Ameritrade. Api access is very expensive, but this article says I can use httr:
@@ -63,40 +62,47 @@ processDogs <- function(previousDogs,currentDogs,portfolioValue)
   # First, the dogs I own that are no longer small dogs: sell all I have
   ####################################################### 
   
-  # if length greater than 0, these are previous dogs (I got a current quote above)
-  # *****TO DO: What if length = o?*****
-  sellAll <- setdiff(previousDogs$symbol,currentDogs$symbol) 
-  # create a new data frame of sellAll dogs symbols, number of shares I own, and SELL action
-  # include the current price per share, just for a sanity check calculation before selling.
-  sellAllDogsAndActions <- previousDogs[previousDogs$symbol %in% sellAll,c("symbol","price.per.share","num.shares")]
-  sellAllDogsAndActions$action <- "SELL"
-  # include the total I will own after executing the trade action (0, since I sell all)
-  sellAllDogsAndActions$num.shares.after.action <- 0
- 
+  # if length greater than 0, these are previous dogs. I got a current quote above.
+  # if length = 0, small dogs remained the same; there is no case where I sell all.
+  sellAll <- setdiff(previousDogs$symbol,currentDogs$symbol)
+  flog.debug("length(sellAll): %s",length(sellAll))
+  if (length(sellAll)>0)
+  {
+    # create a new data frame of sellAll dogs symbols, number of shares I own, and SELL action
+    # include the current price per share, just for a sanity check calculation before selling.
+    sellAllDogsAndActions <- previousDogs[previousDogs$symbol %in% sellAll,c("symbol","price.per.share","num.shares")]
+    sellAllDogsAndActions$action <- "SELL"
+    # include the total I will own after executing the trade action (0, since I sell all)
+    sellAllDogsAndActions$num.shares.after.action <- 0  
+  }
+
   ####################################################### 
   # Next, the new small dogs--ones I do not own any of yet: buy all (target value = 1/5 portfolio value)
   #######################################################  
 
   # if length greater than 0, these are current dogs. I already have the quote
-  # *****TO DO: What if length = o?*****
+  # if length = 0, small dogs remained the same; there is no case where I buy all.
   buyAll <- setdiff(currentDogs$symbol,previousDogs$symbol) 
-
-  # make a new data frame from the new ("buy all") symbols and quotes
-  # include the current price per share, just for a sanity check calculation before selling.
-  buyAllDogsAndActions <- currentDogs[currentDogs$symbol %in% buyAll, ] 
-
-  # add column indicating number of shares to buy for each stock
-  # number of shares to buy is 1/5 the portfolio value ("target") / current price, rounded
-  buyAllDogsAndActions$num.shares <- round(target/buyAllDogsAndActions$price.per.share)
-  buyAllDogsAndActions$action <- "BUY"
-  # include the total I will own after executing the trade action (same as num.shares, since I buy all)
-  buyAllDogsAndActions$num.shares.after.action <- buyAllDogsAndActions$num.shares
+  flog.debug("length(buyAll): %s", length(buyAll))
+  if(length(buyAll)>0)
+  {
+    # make a new data frame from the new ("buy all") symbols and quotes
+    # include the current price per share, just for a sanity check calculation before selling.
+    buyAllDogsAndActions <- currentDogs[currentDogs$symbol %in% buyAll, ] 
+    
+    # add column indicating number of shares to buy for each stock
+    # number of shares to buy is 1/5 the portfolio value ("target") / current price, rounded
+    buyAllDogsAndActions$num.shares <- round(target/buyAllDogsAndActions$price.per.share)
+    buyAllDogsAndActions$action <- "BUY"
+    # include the total I will own after executing the trade action (same as num.shares, since I buy all)
+    buyAllDogsAndActions$num.shares.after.action <- buyAllDogsAndActions$num.shares 
+  }
 
   ####################################################### 
   # Then, the dogs I own that are still small dogs: buy or sell some
   ####################################################### 
   
-  # *****TO DO: What if length = o?*****
+  # *****TO DO: What if length = o?***** when could this occur? all dogs change - unlikely but possible
   buyOrSell <- intersect(previousDogs$symbol,currentDogs$symbol)
 
   # Make a new data frame from the symbols where I may need to buy or sell. Include the current
@@ -130,9 +136,17 @@ processDogs <- function(previousDogs,currentDogs,portfolioValue)
   # Combine the results and return
   #######################################################   
   
-  # combine the actions data frames
-  actionsDataFrame <- rbind(sellAllDogsAndActions,buyAllDogsAndActions)
-  actionsDataFrame <- rbind(actionsDataFrame,buyOrSellDogsAndActions)
+  # combine the actions data frames. or, if small dogs stayed the same, use buyOrSellDogsAndActions only.
+  # Note that if length(sellAll) = 0, so does length(buyAll).
+  if (length(sellAll)>0) 
+  {
+    actionsDataFrame <- rbind(sellAllDogsAndActions,buyAllDogsAndActions)
+    actionsDataFrame <- rbind(actionsDataFrame,buyOrSellDogsAndActions)    
+  } else
+  {
+    actionsDataFrame <- buyOrSellDogsAndActions
+  }
+
   # TO DO: first column in this actions data frame has odd numbers. 
   # fix that for now with this hack.
   rownames(actionsDataFrame) <- c(1:nrow(actionsDataFrame))
