@@ -8,7 +8,6 @@
 #######################################  
 # TO DO
 #######################################
-# len = 0 issues
 # handle / test multiple years
 # organize into functions, called from main
 # pretty up the spreadsheet formatting
@@ -50,7 +49,7 @@ getLast <- function(symbolCharVector)
 }
 
 #retuns a data frame with "actions", which is the number of each stock to buy or sell
-processDogs <- function(previousDogs,currentDogs,portfolioValue)
+processDogs <- function(previousDogs,currentDogs,portfolioValue,config)
 {
   # calculate target value for each small dog: total value of the portfolio today divided by 5 
   target <- as.numeric(portfolioValue)/5
@@ -63,7 +62,7 @@ processDogs <- function(previousDogs,currentDogs,portfolioValue)
   ####################################################### 
   
   # if length greater than 0, these are previous dogs. I got a current quote above.
-  # if length = 0, small dogs remained the same; there is no case where I sell all.
+  # if length = 0, small dogs remained the same.
   sellAll <- setdiff(previousDogs$symbol,currentDogs$symbol)
   flog.debug("length(sellAll): %s",length(sellAll))
   if (length(sellAll)>0)
@@ -81,7 +80,7 @@ processDogs <- function(previousDogs,currentDogs,portfolioValue)
   #######################################################  
 
   # if length greater than 0, these are current dogs. I already have the quote
-  # if length = 0, small dogs remained the same; there is no case where I buy all.
+  # if length = 0, small dogs remained the same.
   buyAll <- setdiff(currentDogs$symbol,previousDogs$symbol) 
   flog.debug("length(buyAll): %s", length(buyAll))
   if(length(buyAll)>0)
@@ -102,49 +101,64 @@ processDogs <- function(previousDogs,currentDogs,portfolioValue)
   # Then, the dogs I own that are still small dogs: buy or sell some
   ####################################################### 
   
-  # *****TO DO: What if length = o?***** when could this occur? all dogs change - unlikely but possible
+  # if length > 0, these are dogs that I own that are still small dogs.
+  # if length = 0, all small dogs have changed this year -- very unlikely, but possible.
   buyOrSell <- intersect(previousDogs$symbol,currentDogs$symbol)
-
-  # Make a new data frame from the symbols where I may need to buy or sell. Include the current
-  # current price per share, just for a sanity check calculation before selling.
-  # TO DO: not sure why, but I must specify columns c("symbol","price.per.share","num.shares") else I get a NA. column.
-  # NOTE: this is num.shares I currently own. I will overwrite this with the num.shares to buy or sell.
-  buyOrSellDogsAndActions <- previousDogs[previousDogs$symbol %in% buyOrSell,c("symbol","price.per.share","num.shares")]
-  
-  # hold on to num.shares I currently own in num.shares.after.action for now
-  buyOrSellDogsAndActions$num.shares.after.action <- buyOrSellDogsAndActions$num.shares
-  
-  # Calculate num.shares to buy or sell, overwrite the current num.shares column.
-  # ((current.num.shares * current.price) - target)/current.price
-  # Leave positive / negative sign for now.
-  buyOrSellDogsAndActions$num.shares <- round(((buyOrSellDogsAndActions$num.shares*buyOrSellDogsAndActions$price.per.share) - target)/buyOrSellDogsAndActions$price.per.share)
-
-  # update num.shares.after.action to be the total
-  buyOrSellDogsAndActions$num.shares.after.action <- buyOrSellDogsAndActions$num.shares.after.action - buyOrSellDogsAndActions$num.shares
-
-  # set the action based on num.share negative or positive.
-  # if negative, buy.
-  # if positive, sell.
-  # if 0, N/A
-  # TO DO: 0 is SELL....fix that
-  buyOrSellDogsAndActions$action <- ifelse(buyOrSellDogsAndActions$num.shares<0,"BUY","SELL")
-  
-  # Now remove the positive or negative
-  buyOrSellDogsAndActions$num.shares <- abs(buyOrSellDogsAndActions$num.shares)
+  flog.debug("length(buyOrSell): %s",length(buyOrSell))
+  if(length(buyOrSell)>0)
+  {
+    # Make a new data frame from the symbols where I may need to buy or sell. Include the current
+    # current price per share, just for a sanity check calculation before selling.
+    # TO DO: not sure why, but I must specify columns c("symbol","price.per.share","num.shares") else I get a NA. column.
+    # NOTE: this is num.shares I currently own. I will overwrite this with the num.shares to buy or sell.
+    buyOrSellDogsAndActions <- previousDogs[previousDogs$symbol %in% buyOrSell,c("symbol","price.per.share","num.shares")]
+    
+    # hold on to num.shares I currently own in num.shares.after.action for now
+    buyOrSellDogsAndActions$num.shares.after.action <- buyOrSellDogsAndActions$num.shares
+    
+    # Calculate num.shares to buy or sell, overwrite the current num.shares column.
+    # ((current.num.shares * current.price) - target)/current.price
+    # Leave positive / negative sign for now.
+    buyOrSellDogsAndActions$num.shares <- round(((buyOrSellDogsAndActions$num.shares*buyOrSellDogsAndActions$price.per.share) - target)/buyOrSellDogsAndActions$price.per.share)
+    
+    # update num.shares.after.action to be the total
+    buyOrSellDogsAndActions$num.shares.after.action <- buyOrSellDogsAndActions$num.shares.after.action - buyOrSellDogsAndActions$num.shares
+    
+    # set the action based on num.share negative or positive.
+    # if negative, buy.
+    # if positive, sell.
+    # if 0, N/A
+    # TO DO: 0 is SELL....fix that
+    buyOrSellDogsAndActions$action <- ifelse(buyOrSellDogsAndActions$num.shares<0,"BUY","SELL")
+    
+    # Now remove the positive or negative
+    buyOrSellDogsAndActions$num.shares <- abs(buyOrSellDogsAndActions$num.shares)
+  }
 
   ####################################################### 
   # Combine the results and return
   #######################################################   
   
-  # combine the actions data frames. or, if small dogs stayed the same, use buyOrSellDogsAndActions only.
-  # Note that if length(sellAll) = 0, so does length(buyAll).
-  if (length(sellAll)>0) 
+  # combine the actions data frames
+  
+  if (length(buyOrSell) == config$totalNumSmallDogs)
   {
-    actionsDataFrame <- rbind(sellAllDogsAndActions,buyAllDogsAndActions)
-    actionsDataFrame <- rbind(actionsDataFrame,buyOrSellDogsAndActions)    
-  } else
-  {
+    # All small dogs stayed the same. 
+    # Means both length(sellAll) == 0 and length(buyAll) == 0
     actionsDataFrame <- buyOrSellDogsAndActions
+  }
+  if (length(sellAll)>0 && length(sellAll) != config$totalNumSmallDogs)
+  {
+    # Some (not all) dogs I own are no longer small dogs--the most common case.
+    # Means both length(buyAll) and length(buyOrSell) are also not 0.
+    actionsDataFrame <- rbind(sellAllDogsAndActions,buyAllDogsAndActions)
+    actionsDataFrame <- rbind(actionsDataFrame,buyOrSellDogsAndActions)
+  }
+  if (length(sellAll) == config$totalNumSmallDogs)
+  {
+    # All dogs I own are no longer small dogs.
+    # Means length(buyAll) is also 5 and length(buyOrSell) == 0
+    actionsDataFrame <- rbind(sellAllDogsAndActions,buyAllDogsAndActions)
   }
 
   # TO DO: first column in this actions data frame has odd numbers. 
@@ -315,7 +329,7 @@ main <- function(currentTotalValue)
   # figure out what to buy or sell
   #######################################################   
   
-  actionsDataFrame <- processDogs(previousSmallDogs,currentSmallDogsDataFrame,currentTotalValue)
+  actionsDataFrame <- processDogs(previousSmallDogs,currentSmallDogsDataFrame,currentTotalValue,config)
   
   #######################################################   
   # set up for next year: currentDogs will be previousDogs

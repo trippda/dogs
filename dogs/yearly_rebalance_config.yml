@@ -1,6 +1,6 @@
 default:
-        # debugLevel: INFO
-        debugLevel: DEBUG
+        debugLevel: INFO
+        # debugLevel: DEBUG
         # directory for logging AND excel input / output
         workingDirectory: "C:/Users/Dan/Documents/dogs"
         logFileName: "yearly_rebalance.log"
@@ -13,3 +13,5 @@ default:
         dogsPageNameSuffix: "-dogs-of-the-dow.htm"
         # Index of table on the small dogs page
         dogsTableIndex: 12
+        # Portfolio size / number of stocks. Strategy calls for 5.
+        totalNumSmallDogs: 5
