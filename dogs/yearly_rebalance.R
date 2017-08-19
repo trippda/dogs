@@ -363,6 +363,7 @@ main <- function(currentTotalValue)
   s <- getSheets(workbook)[[1]]
   headerStyle <- CellStyle(workbook) + Font(workbook, isBold=TRUE) 
   addDataFrame(summarySheet, sheet=s, row.names = FALSE, showNA = FALSE, colnamesStyle = headerStyle)
+  autoSizeColumn(s,1)
   saveWorkbook(workbook, file = smallDogsWorkingFileName)
 
   # write the symbols and actions for the year in a new "actions" worksheet
