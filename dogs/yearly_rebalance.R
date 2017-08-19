@@ -8,10 +8,10 @@
 #######################################  
 # TO DO
 #######################################
-# handle / test multiple years
-# organize into functions, called from main
 # pretty up the spreadsheet formatting
 # ******initialize SmallDogs.xlsx with existing data, ready for march 2018 rebalance*****
+# handle / test multiple years
+# organize into functions, called from main
 # get TotalValueOfDogsToday from Ameritrade. Api access is very expensive, but this article says I can use httr:
 #   https://stackoverflow.com/questions/10692066/how-to-webscrape-secured-pages-in-r-https-links-using-readhtmltable-from-xml
 
@@ -184,7 +184,7 @@ calcCurrentNumShares <- function (currentDogs,currentActions)
 }
 
 # adds the current year summary stats to the summarySheet datafile
-updateSummary <- function(summarySheet, currentTotalValue, previousDogs, lastYear, thisYear)
+updateSummary <- function(summarySheet, currentTotalValue, previousDogs, lastYear, thisYear, config)
 {
 
   ####################################################### 
@@ -204,7 +204,7 @@ updateSummary <- function(summarySheet, currentTotalValue, previousDogs, lastYea
   #######################################################
   
   # portfolio sum / 5
-  portfolioAverage <- portfolioStartSum / 5
+  portfolioAverage <- portfolioStartSum / config$totalNumSmallDogs
   
   ####################################################### 
   # previous year total (end): the value of the portfolio on the day I rebalance, BEFORE I rebalance)
@@ -216,7 +216,7 @@ updateSummary <- function(summarySheet, currentTotalValue, previousDogs, lastYea
   ####################################################### 
   # previous year average (end), this year target
   #######################################################
-  currentAverage <- currentTotalValue / 5
+  currentAverage <- currentTotalValue / config$totalNumSmallDogs
 
   ####################################################### 
   # previous year average gain / loss (percent)
@@ -351,7 +351,7 @@ main <- function(currentTotalValue)
   flog.debug("summary after dropping NA. column: ", summarySheet, capture = TRUE)
   
   # update with this year's data
-  summarySheet <- updateSummary(summarySheet, currentTotalValue, previousSmallDogs, lastYear, thisYear)
+  summarySheet <- updateSummary(summarySheet, currentTotalValue, previousSmallDogs, lastYear, thisYear, config)
   
   ####################################################### 
   # Record all of this in excel
