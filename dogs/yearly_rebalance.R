@@ -8,7 +8,6 @@
 #######################################  
 # TO DO
 #######################################
-# pretty up the spreadsheet formatting
 # ******initialize SmallDogs.xlsx with existing data, ready for march 2018 rebalance*****
 # handle / test multiple years
 # organize into functions, called from main
@@ -248,6 +247,33 @@ updateSummary <- function(summarySheet, currentTotalValue, previousDogs, lastYea
   return(summarySheet)
 }
 
+# Writes a data frame to a spreadsheet, with some formatting.
+# TO DO: instead of passing in the vector of integers repesenting the columns to resize, pass in a vector of column header strings--that
+# lets me add/remove columns without breaking.
+writeFormattedWorkSheet <- function(bNewWorkSheet, sNewWorkSheetName, iOldWorkSheetIndex, bBoldHeaders, bAutosizeColumns, vAutosizeColumns, dataFrameToWrite, excelFileName)
+  {
+    workbook <- loadWorkbook(excelFileName)
+    # TO DO: figure out what setForceFormulaRecalculation does and if I need it. For now it seems I do not.
+    #workbook$setForceFormulaRecalculation(TRUE)
+    if(bNewWorkSheet)
+    {
+      s <- createSheet(workbook, sheetName=sNewWorkSheetName)
+    } else
+    {
+      s <- getSheets(workbook)[[iOldWorkSheetIndex]]
+    }
+    
+    headerStyle <- CellStyle(workbook) + Font(workbook, isBold=bBoldHeaders) 
+    addDataFrame(dataFrameToWrite, sheet=s, row.names = FALSE, showNA = FALSE, colnamesStyle = headerStyle)
+    if (bAutosizeColumns) {
+      for (columnIndex in vAutosizeColumns) {
+        autoSizeColumn(s,columnIndex)
+      }
+    }
+    saveWorkbook(workbook, file = excelFileName)
+
+}
+
 main <- function(currentTotalValue)
 {
   #######################################################   
@@ -357,22 +383,14 @@ main <- function(currentTotalValue)
   # Record all of this in excel
   ####################################################### 
 
-  # TO DO: pretty this up - column widths, number formats
-  workbook <- loadWorkbook(smallDogsWorkingFileName)
-  workbook$setForceFormulaRecalculation(TRUE)
-  s <- getSheets(workbook)[[1]]
-  headerStyle <- CellStyle(workbook) + Font(workbook, isBold=TRUE) 
-  addDataFrame(summarySheet, sheet=s, row.names = FALSE, showNA = FALSE, colnamesStyle = headerStyle)
-  autoSizeColumn(s,1)
-  saveWorkbook(workbook, file = smallDogsWorkingFileName)
+  # Update the existing summary sheet
+  writeFormattedWorkSheet(FALSE,NULL,1,TRUE,TRUE,c(1,2),summarySheet,smallDogsWorkingFileName)
 
   # write the symbols and actions for the year in a new "actions" worksheet
-  # TO DO: pretty up the formatting
-  write.xlsx(actionsDataFrame,smallDogsWorkingFileName,sheetName = paste(thisYear,"actions", sep = "-"),append = TRUE)
+  writeFormattedWorkSheet(TRUE,paste(thisYear,"actions", sep = "-"),NULL,TRUE,TRUE,c(1:6),actionsDataFrame,smallDogsWorkingFileName)
   
   # write the new (current) dogs in a new worksheet
-  # TO DO: pretty up the formatting
-  write.xlsx(currentSmallDogsDataFrame,smallDogsWorkingFileName,sheetName = thisYear, append = TRUE)
+  writeFormattedWorkSheet(TRUE,thisYear,NULL,TRUE,TRUE,c(1:4),currentSmallDogsDataFrame,smallDogsWorkingFileName)
   
   ####################################################### 
   # "all done" message
