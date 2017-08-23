@@ -8,7 +8,6 @@
 #######################################  
 # TO DO
 #######################################
-# ******initialize SmallDogs.xlsx with existing data, ready for march 2018 rebalance*****
 # handle / test multiple years
 # organize into functions, called from main
 # get TotalValueOfDogsToday from Ameritrade. Api access is very expensive, but this article says I can use httr:
