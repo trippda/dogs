@@ -317,31 +317,43 @@ main <- function(currentTotalValue)
   # get this year's small dogs
   #######################################################   
   
-  # URL to scrape (current year)
-  currentDogsURL <- paste0(config$dogsSite,thisYear,config$dogsPageNameSuffix)
-  
-  # get the page. 
-  # fyi I read that useInternalNodes = TRUE is ignored for HTML docs, but readHTMLTable below fails without it.
-  currentDogs.html <- htmlTreeParse(currentDogsURL , useInternalNodes = TRUE)
+  ##2019 hack: http://www.dogsofthedow.com/ did not post a 2019 dogs page. 
+  ##I am manually taking small dogs from https://www.money-zine.com/investing/stocks/dogs-of-the-dow-2019/
+  ##and populating currentSmallDogsCharVector
 
-  # parse, just to figure out which table. Leave commented for run time.
-  # tables <- readHTMLTable(currentDogs.html,as.data.frame = FALSE)
   
-  # get table #12 as a dataframe
-  # (skip the row below the header row - it is meta info I do not want/need
-  tables <- readHTMLTable(currentDogs.html,skip.rows = 2,stringsAsFactors=FALSE, which = config$dogsTableIndex)
+    ## URL to scrape (current year)
+    #currentDogsURL <- paste0(config$dogsSite,thisYear,config$dogsPageNameSuffix)
+    #flog.debug("currentDogsURL is: %s", currentDogsURL)
+    #
+    ## get the page. 
+    ## fyi I read that useInternalNodes = TRUE is ignored for HTML docs, but readHTMLTable below fails without it.
+    #currentDogs.html <- htmlTreeParse(currentDogsURL , useInternalNodes = TRUE)
+    #
+    ## parse, just to figure out which table. Leave commented for run time.
+    ## tables <- readHTMLTable(currentDogs.html,as.data.frame = FALSE)
+    #
+    ## get table #12 as a dataframe
+    ## (skip the row below the header row - it is meta info I do not want/need
+    #tables <- readHTMLTable(currentDogs.html,skip.rows = 2,stringsAsFactors=FALSE, which = config$dogsTableIndex)
+    #
+    ## select only the small dogs.
+    ## spaces in column names are problematic, so get rid of those first
+    #names(tables) <-gsub(" ",".",names(tables))
+    #currentSmallDogs <- subset(tables, Small.Dog == "Yes", Symbol)
+    #
+    ########################################################   
+    ## get a quote for each current small dog
+    ########################################################   
+    #
+    ## convert currentSmallDogs dataframe into a character vector 
+    #currentSmallDogsCharVector <- currentSmallDogs[['Symbol']]
+    
   
-  # select only the small dogs.
-  # spaces in column names are problematic, so get rid of those first
-  names(tables) <-gsub(" ",".",names(tables))
-  currentSmallDogs <- subset(tables, Small.Dog == "Yes", Symbol)
-  
-  #######################################################   
-  # get a quote for each current small dog
-  #######################################################   
-  
-  # convert currentSmallDogs dataframe into a character vector 
-  currentSmallDogsCharVector <- currentSmallDogs[['Symbol']]
+  ##2019 hack: http://www.dogsofthedow.com/ did not post a 2019 dogs page. 
+  ##I am manually taking small dogs from https://www.money-zine.com/investing/stocks/dogs-of-the-dow-2019/
+  ##and populating currentSmallDogsCharVector
+  currentSmallDogsCharVector <- c("XOM","VZ","KO","PFE","CSCO")
   
   # get a quote (LAST only) for each small dog
   currentSmallDogsQuotesLast <- getLast(currentSmallDogsCharVector)

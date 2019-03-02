@@ -1,6 +1,6 @@
 default:
-        debugLevel: INFO
-        # debugLevel: DEBUG
+        #debugLevel: INFO
+        debugLevel: DEBUG
         # directory for logging AND excel input / output
         workingDirectory: "C:/Users/Dan/Documents/dogs"
         logFileName: "yearly_rebalance.log"
